@@ -31,6 +31,8 @@ const Bubble: React.FC<{x: number; y: number; w: number; h: number; bg: string; 
         boxShadow: '0 4px 14px rgba(40,60,90,0.10)',
         transform: `scale(${k})`,
         transformOrigin: right ? '100% 100%' : '0% 100%',
+        filter: k < 1 ? `blur(${8 * (1 - Math.min(1, k))}px)` : undefined,
+        opacity: Math.min(1, k * 1.5),
       }}
     >
       {children}

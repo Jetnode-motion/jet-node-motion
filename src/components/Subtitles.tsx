@@ -10,15 +10,21 @@ const tokens = (txt: string) =>
     i % 2 === 1 ? [{w: part.trim(), acc: true}] : part.split(/\s+/).filter(Boolean).map((w) => ({w, acc: false}))
   );
 
+const CHAR_STEP = 0.018; // s between letters
+const CHAR_DUR = 0.32;
+
 /**
- * Kinetic subtitles: words rise in one after another, accent words are set in
- * Marck Script (periwinkle, soft glow) with a small overshoot.
+ * Kinetic subtitles. Letters come in one by one from blur to sharp, the
+ * freshest letters carry a periwinkle tint (Spotify-concept reference).
+ * Accent words are Marck Script with a soft glow and a small overshoot.
+ * Exit: the whole phrase blurs out and drifts up.
  */
 export const Subtitles: React.FC<{t: number; phrases: Phrase[]; y?: number}> = ({t, phrases, y = 330}) => {
   const ph = phrases.find((p) => t >= p.from && t < p.to);
   if (!ph) return null;
-  const outk = eo3(prog(t, ph.to - 0.16, ph.to));
+  const outk = eo3(prog(t, ph.to - 0.2, ph.to));
   const toks = tokens(ph.text);
+  let ci = 0;
   return (
     <div
       style={{
@@ -26,7 +32,9 @@ export const Subtitles: React.FC<{t: number; phrases: Phrase[]; y?: number}> = (
         left: 75,
         width: 930,
         top: y,
-        transform: 'translateY(-50%)',
+        transform: `translateY(calc(-50% - ${18 * outk}px))`,
+        filter: outk > 0 ? `blur(${10 * outk}px)` : undefined,
+        opacity: 1 - outk,
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'center',
@@ -36,27 +44,55 @@ export const Subtitles: React.FC<{t: number; phrases: Phrase[]; y?: number}> = (
       }}
     >
       {toks.map((tk, j) => {
-        const st = ph.from + 0.055 * j + (tk.acc ? 0.05 : 0);
-        const e = eo3(prog(t, st, st + 0.32));
-        const sc = tk.acc ? eback(prog(t, st, st + 0.35), 2.2) : 1;
+        if (tk.acc) {
+          const st = ph.from + ci * CHAR_STEP + 0.05;
+          ci += tk.w.length;
+          const e = eo3(prog(t, st, st + 0.4));
+          const sc = eback(prog(t, st, st + 0.4), 2.2);
+          return (
+            <span
+              key={j}
+              style={{
+                display: 'inline-block',
+                fontFamily: F.accent,
+                fontSize: ph.size * 1.42,
+                lineHeight: 1.15,
+                color: C.peri,
+                textShadow: '0 0 18px rgba(97,115,244,0.45)',
+                opacity: e,
+                filter: `blur(${8 * (1 - e)}px)`,
+                transform: `translateY(${16 * (1 - e)}px) scale(${sc})`,
+                marginLeft: 8,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {tk.w}
+            </span>
+          );
+        }
+        const chars = Array.from(tk.w);
         return (
-          <span
-            key={j}
-            style={{
-              display: 'inline-block',
-              fontFamily: tk.acc ? F.accent : F.main,
-              fontWeight: tk.acc ? 400 : 600,
-              fontSize: tk.acc ? ph.size * 1.42 : ph.size,
-              lineHeight: 1.15,
-              color: tk.acc ? C.peri : C.ink,
-              textShadow: tk.acc ? '0 0 18px rgba(97,115,244,0.45)' : undefined,
-              opacity: e * (1 - outk),
-              transform: `translateY(${24 * (1 - e) - 18 * outk}px) scale(${sc})`,
-              marginLeft: tk.acc ? 8 : 0,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tk.w}
+          <span key={j} style={{display: 'inline-block', whiteSpace: 'nowrap', fontFamily: F.main, fontWeight: 600, fontSize: ph.size, lineHeight: 1.15}}>
+            {chars.map((ch, k) => {
+              const st = ph.from + ci * CHAR_STEP;
+              ci += 1;
+              const e = eo3(prog(t, st, st + CHAR_DUR));
+              const tint = 1 - prog(t, st + 0.05, st + 0.45);
+              return (
+                <span
+                  key={k}
+                  style={{
+                    display: 'inline-block',
+                    opacity: e,
+                    filter: e < 1 ? `blur(${7 * (1 - e)}px)` : undefined,
+                    transform: `translateX(${6 * (1 - e)}px)`,
+                    color: tint > 0.01 ? `color-mix(in srgb, ${C.peri} ${Math.round(tint * 100)}%, ${C.ink})` : C.ink,
+                  }}
+                >
+                  {ch}
+                </span>
+              );
+            })}
           </span>
         );
       })}

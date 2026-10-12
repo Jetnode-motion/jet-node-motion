@@ -6,7 +6,7 @@ import {ShellBackground, DotGrid} from '../../components/Background';
 import {Phone, SCREEN} from '../../components/Phone';
 import {AppIcon, Plane, Txt} from '../../components/Primitives';
 import {Plate} from '../../components/Plate';
-import {Ripple, TapHand} from '../../components/Hand';
+import {TouchTap} from '../../components/Touch';
 import {Subtitles} from '../../components/Subtitles';
 import {Grain} from '../../components/Grain';
 import {Whitelist} from '../../screens/Whitelist';
@@ -36,6 +36,7 @@ const camera = (t: number) => {
     cy += sh * Math.cos(t * 77);
   }
   cy += 6 * Math.sin(t * 1.3); // gentle float
+  cx += 8 * Math.sin(t * 0.7); // slow lateral drift
   return {s, cx, cy};
 };
 
@@ -78,16 +79,27 @@ const ScreenContent: React.FC<{t: number}> = ({t}) => {
       </>
     );
   }
-  if (t < 9.75) return <AppHome t={t} />;
-  const k = eq5(prog(t, 9.75, 10.08));
+  if (t < 9.75) {
+    // app content arrives from blur after the deeplink expand
+    const e = eo3(prog(t, 6.9, 7.35));
+    return (
+      <div style={{position: 'absolute', inset: 0, filter: e < 1 ? `blur(${12 * (1 - e)}px)` : undefined}}>
+        <AppHome t={t} />
+      </div>
+    );
+  }
+  // stage change: app dims out, the server list builds in from blur
+  const out = eo3(prog(t, 9.75, 9.95));
+  const inn = eo3(prog(t, 9.85, 10.25));
   return (
     <>
-      {k < 1 && (
-        <div style={{position: 'absolute', inset: 0, transform: `translateX(${-SCREEN.w * 0.35 * k}px)`}}>
+      <div style={{position: 'absolute', inset: 0, background: '#000'}} />
+      {out < 1 && (
+        <div style={{position: 'absolute', inset: 0, opacity: 1 - out, transform: `scale(${1 - 0.03 * out})`, filter: `blur(${8 * out}px)`}}>
           <AppHome t={t} />
         </div>
       )}
-      <div style={{position: 'absolute', inset: 0, transform: `translateX(${SCREEN.w * (1 - k)}px)`, boxShadow: '-10px 0 60px rgba(0,0,0,0.35)'}}>
+      <div style={{position: 'absolute', inset: 0, opacity: inn, filter: inn < 1 ? `blur(${12 * (1 - inn)}px)` : undefined, transform: `scale(${1.03 - 0.03 * inn})`}}>
         <Servers t={t} />
       </div>
     </>
@@ -191,8 +203,7 @@ const EndCard: React.FC<{t: number}> = ({t}) => {
         </Plate>
         <div style={{position: 'absolute', inset: 0, borderRadius: 40, background: '#fff', opacity: 0.18 * fl}} />
       </div>
-      <Ripple x={600} y={1410} p={prog(t, TAP4, TAP4 + 0.55)} color={C.peri} rmax={240} />
-      <TapHand t={t} tap={TAP4} x={600} y={1440} scale={0.9} />
+      <TouchTap t={t} tap={TAP4} x={600} y={1420} size={110} />
     </AbsoluteFill>
   );
 };
@@ -205,9 +216,9 @@ export const JetnodePromo: React.FC = () => {
   const toScreen = (x: number, y: number) => ({x: (x - cx) * s + W / 2, y: (y - cy) * s + FOCUS_Y});
   const drop = prog(t, 11.78, 12.12) ** 2 * 1900;
   const taps = [
-    {tap: TAP1, ...s2w(B1.x + B1.w / 2, B1.y + B1.h / 2), color: C.peri},
-    {tap: TAP2, ...s2w(B2.x + B2.w / 2, B2.y + B2.h / 2), color: C.peri},
-    {tap: TAP3, ...s2w(302, 640), color: C.mint},
+    {tap: TAP1, ...s2w(B1.x + B1.w / 2, B1.y + B1.h / 2), color: '97,115,244'},
+    {tap: TAP2, ...s2w(B2.x + B2.w / 2, B2.y + B2.h / 2), color: '97,115,244'},
+    {tap: TAP3, ...s2w(302, 640), color: '134,232,168'},
   ];
   return (
     <AbsoluteFill style={{fontFamily: F.main, color: C.ink, overflow: 'hidden'}}>
@@ -230,8 +241,7 @@ export const JetnodePromo: React.FC = () => {
         const p = toScreen(x, y);
         return (
           <React.Fragment key={tap}>
-            <Ripple x={p.x} y={p.y} p={prog(t, tap, tap + 0.5)} color={color} rmax={170} />
-            <TapHand t={t} tap={tap} x={p.x} y={p.y} />
+            <TouchTap t={t} tap={tap} x={p.x} y={p.y} color={color} size={tap === TAP3 ? 150 : 100} />
           </React.Fragment>
         );
       })}
