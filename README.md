@@ -12,7 +12,7 @@ npx remotion render src/index.ts JetnodePromoDraft out/draft.mp4      # fast pre
 npx remotion render src/index.ts JetnodeAd out/jetnode-ad.mp4         # v4 ad, Privata-style plate animations
 ```
 
-Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. Marck Script (OFL) ships in `public/fonts`.
+Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. The accent font is **SignPainter HouseScript** (Apple-distributed, not stored here): put `SignPainter-HouseScript.otf` into `public/fonts`. Without it accents fall back to Marck Script (OFL), which ships in `public/fonts`.
 
 ## Structure
 

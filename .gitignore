@@ -3,3 +3,4 @@ out
 .DS_Store
 # SF Pro is licensed by Apple and must not be published: install it on your machine instead
 public/fonts/SF-*
+public/fonts/SignPainter*

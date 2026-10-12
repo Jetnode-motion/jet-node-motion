@@ -18,7 +18,8 @@ export const C = {
 // Inter Display is the open-source fallback with nearly the same metrics.
 export const F = {
   main: '"SF Pro Display", "Inter Display", Inter, -apple-system, Helvetica, Arial, sans-serif',
-  accent: '"Marck Script", cursive',
+  // Accent words: SignPainter HouseScript (has Cyrillic); Marck Script if the file is missing.
+  accent: '"SignPainter", "Marck Script", cursive',
 };
 
 export const FPS = 30;
