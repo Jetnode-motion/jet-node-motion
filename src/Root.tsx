@@ -7,6 +7,8 @@ import {JetnodePromo} from './compositions/JetnodePromo/Promo';
 import {DURATION} from './compositions/JetnodePromo/timeline';
 import {JetnodeAd} from './compositions/JetnodeAd/Ad';
 import {DURATION as AD_DURATION} from './compositions/JetnodeAd/timeline';
+import {JetnodeAd30} from './compositions/JetnodeAd30/Ad30';
+import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
 
 const PromoWithBlur: React.FC = () => (
   <CameraMotionBlur shutterAngle={180} samples={5}>
@@ -20,6 +22,12 @@ const AdWithBlur: React.FC = () => (
   </CameraMotionBlur>
 );
 
+const Ad30WithBlur: React.FC = () => (
+  <CameraMotionBlur shutterAngle={180} samples={5}>
+    <JetnodeAd30 />
+  </CameraMotionBlur>
+);
+
 export const RemotionRoot: React.FC = () => (
   <>
     {/* Final render: with motion blur */}
@@ -29,5 +37,8 @@ export const RemotionRoot: React.FC = () => (
     {/* v4 ad: Privata-style plate animations in our light style */}
     <Composition id="JetnodeAd" component={AdWithBlur} durationInFrames={AD_DURATION * FPS} fps={FPS} width={W} height={H} />
     <Composition id="JetnodeAdDraft" component={JetnodeAd} durationInFrames={AD_DURATION * FPS} fps={FPS} width={W} height={H} />
+    {/* v5: ~30 s ad with voiceover and the real bot */}
+    <Composition id="JetnodeAd30" component={Ad30WithBlur} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
+    <Composition id="JetnodeAd30Draft" component={JetnodeAd30} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
   </>
 );

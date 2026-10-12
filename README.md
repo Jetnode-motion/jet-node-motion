@@ -10,6 +10,7 @@ npm run dev          # Remotion Studio: preview and scrub
 npx remotion render src/index.ts JetnodePromo out/jetnode-promo.mp4   # final, with motion blur
 npx remotion render src/index.ts JetnodePromoDraft out/draft.mp4      # fast preview
 npx remotion render src/index.ts JetnodeAd out/jetnode-ad.mp4         # v4 ad, Privata-style plate animations
+npx remotion render src/index.ts JetnodeAd30 out/jetnode-ad30.mp4     # v5, 30 s with voiceover and the real bot
 ```
 
 Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. The accent font is **SignPainter HouseScript** (Apple-distributed, not stored here): put `SignPainter-HouseScript.otf` into `public/fonts`. Without it accents fall back to Marck Script (OFL), which ships in `public/fonts`.
@@ -22,6 +23,8 @@ Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). I
 - `src/screens/` – phone screens: whitelist hook, bot chat, app home, server list
 - `src/compositions/JetnodePromo/` – the 15 s phone-screen promo (v3); all timings and camera keys live in `timeline.ts`
 - `src/compositions/JetnodeAd/` – the 15 s plate-based ad (v4): hook, bypass diagram, bot → deeplink → app, servers, end card
+- `src/compositions/JetnodeAd30/` – the 30 s ad (v5) with voiceover: real app icons (`BrandIcon`, simple-icons), the real bot (`screens/BotChat.tsx`, banners in `public/bot`), servers, speed, price, end card
+- Voiceover: RHVoice `aleksandr-hq` (`apt install rhvoice rhvoice-russian`), lines in `public/audio/vo`; soundtrack mixed by `legacy/python/audio5.py`
 - `legacy/python/` – the first Python/Cairo renderer this promo was ported from
 
 Data in the screens (countries, ping, «12 мс») is placeholder.

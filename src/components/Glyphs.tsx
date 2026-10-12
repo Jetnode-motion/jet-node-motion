@@ -14,7 +14,12 @@ export type GlyphName =
   | 'link'
   | 'check'
   | 'shield'
-  | 'bolt';
+  | 'bolt'
+  | 'laptop'
+  | 'tablet'
+  | 'back'
+  | 'clip'
+  | 'mic';
 
 /** Simple 24×24 line glyphs for service tiles and step icons (no third-party brand marks). */
 const paths: Record<GlyphName, React.ReactNode> = {
@@ -81,6 +86,26 @@ const paths: Record<GlyphName, React.ReactNode> = {
     </>
   ),
   bolt: <path d="M13 3 L5.5 13.5 h5.5 l-1 7.5 L17.5 10.5 h-5.5z" />,
+  laptop: (
+    <>
+      <rect x={4.5} y={5} width={15} height={10.5} rx={1.8} />
+      <path d="M2.5 18.5 h19" />
+    </>
+  ),
+  tablet: (
+    <>
+      <rect x={5} y={3} width={14} height={18} rx={2.5} />
+      <path d="M11 18 h2" />
+    </>
+  ),
+  back: <path d="M14.5 5.5 L8 12 L14.5 18.5" />,
+  clip: <path d="M16.5 7.5 l-7.6 7.6 a1.9 1.9 0 0 0 2.7 2.7 l7.9 -7.9 a3.8 3.8 0 0 0 -5.4 -5.4 l-7.9 7.9 a5.7 5.7 0 0 0 8.1 8.1 l6.2 -6.2" />,
+  mic: (
+    <>
+      <rect x={9} y={3} width={6} height={11} rx={3} />
+      <path d="M5.5 11 a6.5 6.5 0 0 0 13 0 M12 17.5 v3.5" />
+    </>
+  ),
 };
 
 export const Glyph: React.FC<{name: GlyphName; size: number; color?: string; stroke?: number}> = ({name, size, color = '#fff', stroke = 2}) => (
