@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {C, F, W} from '../../style/tokens';
 import {clamp, eback, eio, eo3, eq5, lerp, press, prog} from '../../style/ease';
 import {ShellBackground, DotGrid} from '../../components/Background';
@@ -259,7 +259,6 @@ export const JetnodePromo: React.FC = () => {
       />
       <Subtitles t={t} phrases={PHRASES} />
       <Grain />
-      <Audio src={staticFile('audio/promo.wav')} />
     </AbsoluteFill>
   );
 };

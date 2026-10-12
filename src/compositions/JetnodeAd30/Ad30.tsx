@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Img, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {C, F, H, W} from '../../style/tokens';
 import {clamp, eback, eio, eo3, eq5, lerp, press, prog} from '../../style/ease';
 import {DotGrid, ShellBackground} from '../../components/Background';
@@ -615,7 +615,6 @@ export const JetnodeAd30: React.FC = () => {
       <div style={{position: 'absolute', left: 0, top: 0, width: W, height: 500, background: 'linear-gradient(180deg, rgba(252,239,237,1) 0%, rgba(252,239,237,0.96) 62%, rgba(252,239,237,0) 100%)'}} />
       <Subtitles t={t} phrases={PHRASES} y={300} />
       <Grain />
-      <Audio src={staticFile('audio/ad30.wav')} />
     </AbsoluteFill>
   );
 };

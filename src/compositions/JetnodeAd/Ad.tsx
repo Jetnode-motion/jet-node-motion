@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, useCurrentFrame, useVideoConfig} from 'remotion';
 import {C, F, H, W} from '../../style/tokens';
 import {clamp, eback, eio, eo3, eq5, lerp, press, prog} from '../../style/ease';
 import {DotGrid, ShellBackground} from '../../components/Background';
@@ -703,7 +703,6 @@ export const JetnodeAd: React.FC = () => {
       <TouchTap t={t} tap={TAP_CONNECT} x={btn.x} y={btn.y} size={110} />
       <TouchTap t={t} tap={TAP_CTA} x={cta.x} y={cta.y} size={110} />
       <Grain />
-      <Audio src={staticFile('audio/ad.wav')} />
     </AbsoluteFill>
   );
 };
