@@ -9,6 +9,8 @@ import {JetnodeAd} from './compositions/JetnodeAd/Ad';
 import {DURATION as AD_DURATION} from './compositions/JetnodeAd/timeline';
 import {JetnodeAd30} from './compositions/JetnodeAd30/Ad30';
 import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
+import {YandexDcNews} from './compositions/YandexDcNews/News';
+import {DURATION as NEWS_DURATION} from './compositions/YandexDcNews/timeline';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -37,6 +39,13 @@ const AdDraft = withSound(JetnodeAd, 'ad.wav', false);
 const Ad30 = withSound(JetnodeAd30, 'ad30.wav', true);
 const Ad30Draft = withSound(JetnodeAd30, 'ad30.wav', false);
 
+// Silent news explainer: no soundtrack until one is supplied.
+const NewsFinal: React.FC = () => (
+  <CameraMotionBlur shutterAngle={180} samples={5}>
+    <YandexDcNews />
+  </CameraMotionBlur>
+);
+
 export const RemotionRoot: React.FC = () => (
   <>
     {/* Final render: with motion blur */}
@@ -49,5 +58,8 @@ export const RemotionRoot: React.FC = () => (
     {/* v5: ~30 s ad with voiceover and the real bot */}
     <Composition id="JetnodeAd30" component={Ad30} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
     <Composition id="JetnodeAd30Draft" component={Ad30Draft} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
+    {/* News explainer: strikes on Yandex data centers, silent */}
+    <Composition id="YandexDcNews" component={NewsFinal} durationInFrames={NEWS_DURATION * FPS} fps={FPS} width={W} height={H} />
+    <Composition id="YandexDcNewsDraft" component={YandexDcNews} durationInFrames={NEWS_DURATION * FPS} fps={FPS} width={W} height={H} />
   </>
 );

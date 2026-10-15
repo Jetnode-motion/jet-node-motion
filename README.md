@@ -11,6 +11,7 @@ npx remotion render src/index.ts JetnodePromo out/jetnode-promo.mp4   # final, w
 npx remotion render src/index.ts JetnodePromoDraft out/draft.mp4      # fast preview
 npx remotion render src/index.ts JetnodeAd out/jetnode-ad.mp4         # v4 ad, Privata-style plate animations
 npx remotion render src/index.ts JetnodeAd30 out/jetnode-ad30.mp4     # v5, 30 s with voiceover and the real bot
+npx remotion render src/index.ts YandexDcNews out/yandex-dc-news.mp4  # silent news explainer: strikes on Yandex data centers
 ```
 
 Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. The accent font is **SignPainter HouseScript** (Apple-distributed, not stored here): put `SignPainter-HouseScript.otf` into `public/fonts`. Without it accents fall back to Marck Script (OFL), which ships in `public/fonts`.
