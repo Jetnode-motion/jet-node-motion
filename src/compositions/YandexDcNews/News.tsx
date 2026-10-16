@@ -5,7 +5,7 @@ import {staticFile} from 'remotion';
 import {FPS} from '../../style/tokens';
 import {clamp, eo3, eio, lerp, prog} from '../../style/ease';
 import {Card, cascade} from '../../components/Reveal';
-import {DURATION, SCENES, SUBS, XF} from './timeline';
+import {DURATION, SCENES, SUBS, XF, toDesign} from './timeline';
 
 /*
  * News explainer «Удары по дата-центрам Яндекса», 9:16, silent, told as one story.
@@ -611,7 +611,9 @@ const Captions: React.FC<{t: number}> = ({t}) => (
 );
 
 export const YandexDcNews: React.FC = () => {
-  const t = useCurrentFrame() / FPS;
+  const real = useCurrentFrame() / FPS;
+  // scenes play on their design clock, stretched to the narration; captions follow the voice itself
+  const t = toDesign(real);
   return (
     <AbsoluteFill style={{background: K.bg, overflow: 'hidden'}}>
       {/* faint static glows: lilac and mint-grey */}
@@ -661,7 +663,7 @@ export const YandexDcNews: React.FC = () => {
           </AbsoluteFill>
         );
       })}
-      <Captions t={t} />
+      <Captions t={real} />
     </AbsoluteFill>
   );
 };

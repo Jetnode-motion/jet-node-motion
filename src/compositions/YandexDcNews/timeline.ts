@@ -1,3 +1,5 @@
+import {VO_END, VO_LINES, VO_SUBS} from './vo';
+
 // All timings in seconds. Scenes cross-dissolve through blur over XF unless `out` says zoom-through.
 export const XF = 0.35;
 
@@ -9,7 +11,7 @@ export type Scene = {
   head?: string[];
   zooms: Zoom[];
   out?: 'blur' | 'zoom';
-  /** captions told as one story: chunks of 2–4 words, timed across the scene by their length */
+  /** the scene's line as first written; on-screen captions now come from the voice (vo.ts) */
   subs: string[];
 };
 
@@ -101,19 +103,24 @@ export const SCENES: Scene[] = [
   },
 ];
 
-export const DURATION = 59;
+/** Length of the scene design above; the voiced cut stretches it to the narration (see toDesign). */
+export const DESIGN_DURATION = 59;
+export const DURATION = VO_END;
 
-/** Caption chunks with times: spread across each scene in proportion to their length. */
-export const SUBS = SCENES.flatMap((sc) => {
-  const a = sc.from + 0.45;
-  const b = sc.to - 0.2;
-  const w = sc.subs.map((s) => s.length + 9);
-  const sum = w.reduce((x, y) => x + y, 0);
-  let t = a;
-  return sc.subs.map((text, i) => {
-    const d = ((b - a) * w[i]) / sum;
-    const c = {from: t, to: t + d, text};
-    t += d;
-    return c;
-  });
-});
+/*
+ * The scenes were designed on a 59 s silent timeline; the voice-over runs longer and unevenly.
+ * Each scene is stretched to its spoken line: it starts a beat before its line and ends a beat
+ * before the next one, so headlines, zooms and props land on the words without retiming them.
+ */
+const REAL = [0, ...VO_LINES.slice(1).map((l) => l.from - 0.2), VO_END];
+const DESIGN = [...SCENES.map((s) => s.from), DESIGN_DURATION];
+
+/** Composition time (voice) → scene design time. */
+export const toDesign = (t: number) => {
+  let i = 0;
+  while (i < REAL.length - 2 && t > REAL[i + 1]) i++;
+  return DESIGN[i] + ((t - REAL[i]) * (DESIGN[i + 1] - DESIGN[i])) / (REAL[i + 1] - REAL[i]);
+};
+
+/** Caption chunks timed word by word to the voice (composition time). */
+export const SUBS = VO_SUBS;

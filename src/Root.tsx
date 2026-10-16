@@ -1,5 +1,5 @@
 import React from 'react';
-import {Audio, Composition, staticFile} from 'remotion';
+import {Audio, Composition, Sequence, staticFile} from 'remotion';
 import {CameraMotionBlur} from '@remotion/motion-blur';
 import {FPS, H, W} from './style/tokens';
 import './style/fonts';
@@ -11,6 +11,7 @@ import {JetnodeAd30} from './compositions/JetnodeAd30/Ad30';
 import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
 import {YandexDcNews} from './compositions/YandexDcNews/News';
 import {DURATION as NEWS_DURATION} from './compositions/YandexDcNews/timeline';
+import {VO_OFFSET} from './compositions/YandexDcNews/vo';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -39,12 +40,26 @@ const AdDraft = withSound(JetnodeAd, 'ad.wav', false);
 const Ad30 = withSound(JetnodeAd30, 'ad30.wav', true);
 const Ad30Draft = withSound(JetnodeAd30, 'ad30.wav', false);
 
-// Silent news explainer: no soundtrack until one is supplied.
-const NewsFinal: React.FC = () => (
-  <CameraMotionBlur shutterAngle={180} samples={5}>
-    <YandexDcNews />
-  </CameraMotionBlur>
-);
+// News explainer: one-take ElevenLabs narration (scripts/vo/elevenlabs_story.py), a breath in.
+const withVoice = (blur: boolean): React.FC => {
+  const Wrapped: React.FC = () => (
+    <>
+      {blur ? (
+        <CameraMotionBlur shutterAngle={180} samples={5}>
+          <YandexDcNews />
+        </CameraMotionBlur>
+      ) : (
+        <YandexDcNews />
+      )}
+      <Sequence from={Math.round(VO_OFFSET * FPS)}>
+        <Audio src={staticFile('audio/yandex-dc/story.wav')} />
+      </Sequence>
+    </>
+  );
+  return Wrapped;
+};
+const NewsFinal = withVoice(true);
+const NewsDraft = withVoice(false);
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -58,8 +73,8 @@ export const RemotionRoot: React.FC = () => (
     {/* v5: ~30 s ad with voiceover and the real bot */}
     <Composition id="JetnodeAd30" component={Ad30} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
     <Composition id="JetnodeAd30Draft" component={Ad30Draft} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
-    {/* News explainer: strikes on Yandex data centers, silent */}
-    <Composition id="YandexDcNews" component={NewsFinal} durationInFrames={NEWS_DURATION * FPS} fps={FPS} width={W} height={H} />
-    <Composition id="YandexDcNewsDraft" component={YandexDcNews} durationInFrames={NEWS_DURATION * FPS} fps={FPS} width={W} height={H} />
+    {/* News explainer: strikes on Yandex data centers, with ElevenLabs voice-over */}
+    <Composition id="YandexDcNews" component={NewsFinal} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="YandexDcNewsDraft" component={NewsDraft} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
   </>
 );
