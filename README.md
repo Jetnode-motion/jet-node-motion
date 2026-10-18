@@ -29,3 +29,7 @@ Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). I
 - `legacy/python/` – the first Python/Cairo renderer this promo was ported from
 
 Data in the screens (countries, ping, «12 мс») is placeholder.
+
+### TrafficNews (Reels)
+
+`npx remotion render src/index.ts TrafficNews out/traffic-news.mp4` — news reel «мобильного интернета стало меньше» with a Jetnode VPN insert, in the mixed Shell + glass style. Before rendering copy the fonts (see above) and the sound effects: `public/sfx/` is filled from the project library `/mnt/project-files/sfx` (file names in `src/compositions/TrafficNews/sfx.ts`). Voice: `scripts/vo/elevenlabs_story.py scripts/vo/lines-traffic.json public/audio/traffic`, captions: `scripts/vo/subs.py`.

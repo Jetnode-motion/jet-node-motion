@@ -12,6 +12,9 @@ import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
 import {YandexDcNews} from './compositions/YandexDcNews/News';
 import {DURATION as NEWS_DURATION} from './compositions/YandexDcNews/timeline';
 import {VO_OFFSET} from './compositions/YandexDcNews/vo';
+import {TrafficNews} from './compositions/TrafficNews/News';
+import {DURATION as TRAFFIC_DURATION, VO_OFFSET as TRAFFIC_VO_OFFSET} from './compositions/TrafficNews/timeline';
+import {SFX as TRAFFIC_SFX} from './compositions/TrafficNews/sfx';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -61,6 +64,32 @@ const withVoice = (blur: boolean): React.FC => {
 const NewsFinal = withVoice(true);
 const NewsDraft = withVoice(false);
 
+// Reels on the mobile traffic drop: one-take narration plus sound design from public/sfx (copied from the project library).
+const withVoiceAndSfx = (blur: boolean): React.FC => {
+  const Wrapped: React.FC = () => (
+    <>
+      {blur ? (
+        <CameraMotionBlur shutterAngle={180} samples={5}>
+          <TrafficNews />
+        </CameraMotionBlur>
+      ) : (
+        <TrafficNews />
+      )}
+      <Sequence from={Math.round(TRAFFIC_VO_OFFSET * FPS)}>
+        <Audio src={staticFile('audio/traffic/story.wav')} />
+      </Sequence>
+      {TRAFFIC_SFX.map((s, i) => (
+        <Sequence key={i} from={Math.max(0, Math.round((s.at - s.peak) * FPS))}>
+          <Audio src={staticFile(`sfx/${s.file}`)} volume={s.vol} />
+        </Sequence>
+      ))}
+    </>
+  );
+  return Wrapped;
+};
+const TrafficFinal = withVoiceAndSfx(true);
+const TrafficDraft = withVoiceAndSfx(false);
+
 export const RemotionRoot: React.FC = () => (
   <>
     {/* Final render: with motion blur */}
@@ -76,5 +105,8 @@ export const RemotionRoot: React.FC = () => (
     {/* News explainer: strikes on Yandex data centers, with ElevenLabs voice-over */}
     <Composition id="YandexDcNews" component={NewsFinal} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
     <Composition id="YandexDcNewsDraft" component={NewsDraft} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    {/* Reels: mobile traffic fell for the first time, with a Jetnode VPN insert */}
+    <Composition id="TrafficNews" component={TrafficFinal} durationInFrames={Math.round(TRAFFIC_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="TrafficNewsDraft" component={TrafficDraft} durationInFrames={Math.round(TRAFFIC_DURATION * FPS)} fps={FPS} width={W} height={H} />
   </>
 );
