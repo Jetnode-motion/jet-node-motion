@@ -14,6 +14,17 @@ export const C = {
   white: '#FFFFFF',
 };
 
+// Glass style from the bot menu banners (style-guide.md, «Меню бота: стеклянный стиль»)
+export const GLASS = {
+  bgFrom: '#2970F7', // top-left of the background gradient
+  bgMid: '#4787F3',
+  bgTo: '#B1DBFF', // light corner, bottom-right / top-right
+  solid: '#2262EC', // solid back layer of an icon
+  darkBg: '#050B1E', // dark variant background
+  darkGlow: '#4B81F3', // glow behind the icon on the dark variant
+  pill: 'rgba(255,255,255,0.18)', // caption pill fill, with a thin white stroke
+};
+
 // SF Pro Display must be installed on the machine (Apple licence, not in the repo).
 // Inter Display is the open-source fallback with nearly the same metrics.
 export const F = {
