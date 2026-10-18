@@ -2,9 +2,9 @@ import React from 'react';
 import {AbsoluteFill, Img, staticFile, useCurrentFrame} from 'remotion';
 import {loadFont} from '@remotion/fonts';
 import {C, FPS, GLASS} from '../../style/tokens';
-import {clamp, eback, eio, eo3, lerp, prog} from '../../style/ease';
+import {clamp, eback, eio, eo3, eoexpo, lerp, prog} from '../../style/ease';
 import {Card, cascade} from '../../components/Reveal';
-import {Bg, SCENES, SUBS, XF, sceneAt} from './timeline';
+import {BEATS, Bg, SCENES, SPEED, SUBS, XF, at, sceneAt} from './timeline';
 
 /*
  * Reels «Мобильного интернета стало меньше» with a Jetnode VPN insert, 9:16, voiced.
@@ -37,7 +37,8 @@ const K = {
   white: '#FFFFFF',
 };
 
-const appear = (lt: number, t0: number, d = 0.5) => eo3(prog(lt, t0, t0 + d));
+const appear = (lt: number, t0: number, d = 0.45) => eoexpo(prog(lt, t0, t0 + d));
+const expoInOut = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 2 ** (20 * x - 10) / 2 : (2 - 2 ** (-20 * x + 10)) / 2);
 const softIn = (e: number, dy = 14): React.CSSProperties => ({
   opacity: e,
   filter: e < 0.99 ? `blur(${8 * (1 - e)}px)` : undefined,
@@ -169,7 +170,7 @@ const Sheen: React.FC<{lt: number; t0: number; r: number}> = ({lt, t0, r}) => {
 };
 
 /** Two-layer reveal: the solid lands first, the glass slides over it with a little parallax. */
-const iconIn = (lt: number, t0: number) => ({back: appear(lt, t0, 0.5), front: eback(prog(lt, t0 + 0.12, t0 + 0.62), 1.2)});
+const iconIn = (lt: number, t0: number) => ({back: eoexpo(prog(lt, t0, t0 + 0.7)), front: eback(prog(lt, t0 + 0.1, t0 + 0.55), 1.6)});
 
 const Logo: React.FC<{lt: number}> = ({lt}) => (
   <div style={{position: 'absolute', left: 75, top: 150, display: 'flex', alignItems: 'center', gap: 16, fontFamily: FONT, ...softIn(appear(lt, 0.05), 6)}}>
@@ -224,7 +225,7 @@ const Headline: React.FC<{lt: number; lines: string[]; dark?: boolean; top?: num
           {line.split(' ').map((raw, j) => {
             const acc = raw.startsWith('*');
             const w = raw.replace(/\*/g, '');
-            const st = 0.12 + wi++ * 0.09;
+            const st = 0.08 + wi++ * 0.045;
             if (acc) {
               const wr = eio(prog(lt, st + 0.1, st + 0.8));
               return (
@@ -246,7 +247,7 @@ const Headline: React.FC<{lt: number; lines: string[]; dark?: boolean; top?: num
                 </span>
               );
             }
-            const e = appear(lt, st, 0.55);
+            const e = appear(lt, st, 0.45);
             return (
               <span key={j} style={{display: 'inline-block', ...softIn(e, 10), filter: e < 1 ? `blur(${12 * (1 - e)}px)` : undefined}}>
                 {w}
@@ -291,7 +292,7 @@ const TapRing: React.FC<{lt: number; at: number; x: number; y: number; dark?: bo
   );
 };
 
-const count = (lt: number, t0: number, to: number, d = 1.2) => to * eo3(prog(lt, t0, t0 + d));
+const count = (lt: number, t0: number, to: number, d = 0.8) => to * eoexpo(prog(lt, t0, t0 + d));
 const fmt = (n: number, dec = 0) => n.toFixed(dec).replace('.', ',');
 
 /** Headlines, logo and pills stay put; only the body goes under the camera. */
@@ -715,26 +716,59 @@ const S7: React.FC<{lt: number; part: Part}> = ({lt, part}) => {
 
 const CONTENT = [S1, S2, S3, S4, S5, S6, S7];
 
-// ---------- camera: slow push + soft punch-ins on the content layer ----------
+// ---------- camera: quick expo punch-ins on the content layer, no slow drift ----------
 
-const camera = (lt: number, zooms: {t: number; s: number; x: number; y: number; d?: number}[], dur: number) => {
+const camera = (lt: number, zooms: {t: number; s: number; x: number; y: number; d?: number}[]) => {
   let s = 1;
   let x = 540;
   let y = 900;
   let blur = 0;
   for (const z of zooms) {
-    const d = z.d ?? 0.34;
+    const d = z.d ?? 0.6;
     const p = prog(lt, z.t, z.t + d);
     if (p <= 0) break;
-    const e = eio(p);
+    const e = expoInOut(p);
     s = lerp(s, z.s, e);
     x = lerp(x, z.x, e);
     y = lerp(y, z.y, e);
-    if (p < 1 && d > 0.01 && d < 0.6) blur = 4 * Math.sin(Math.PI * p);
+    if (p < 1 && d > 0.01) blur = 5 * Math.sin(Math.PI * p);
   }
-  const push = 1 + 0.03 * eo3(prog(lt, 0, dur * 0.9));
-  return {s: s * push, x, y, blur};
+  return {s, x, y, blur};
 };
+
+// ---------- glow flash on key beats (welcome video: 0.35 s up, 0.8 s down) ----------
+
+const Flash: React.FC<{t: number}> = ({t}) => (
+  <>
+    {BEATS.map(([i, b], k) => {
+      const t0 = at(i, b);
+      const up = prog(t, t0 - 0.05, t0 + 0.3);
+      const down = prog(t, t0 + 0.3, t0 + 1.1);
+      if (up <= 0 || down >= 1) return null;
+      const a = up < 1 ? eo3(up) : 1 - eio(down);
+      const s = up < 1 ? lerp(0.7, 1.15, eo3(up)) : lerp(1.15, 1.3, down);
+      const dark = onDark(SCENES[i].bg);
+      const c = dark ? '255,255,255' : '97,115,244';
+      return (
+        <div
+          key={k}
+          style={{
+            position: 'absolute',
+            left: 540 - 800,
+            top: 950 - 800,
+            width: 1600,
+            height: 1600,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, rgba(${c},${dark ? 0.32 : 0.2}) 0%, rgba(${c},0) 62%)`,
+            opacity: a,
+            transform: `scale(${s})`,
+            mixBlendMode: dark ? 'screen' : 'multiply',
+          }}
+        />
+      );
+    })}
+  </>
+);
 
 // ---------- captions: centred chunks; Plum on Shell, white on blue and night ----------
 
@@ -802,20 +836,23 @@ export const TrafficNews: React.FC = () => {
       })}
       {SCENES.map((sc, i) => {
         if (t < sc.from - XF || t > sc.to + XF) return null;
-        const lt = t - sc.from;
-        const dur = sc.to - sc.from;
+        // scenes run on design time, SPEED× faster than the clock
+        const lt = (t - sc.from) * SPEED;
         const last = i === SCENES.length - 1;
         const prevZoom = i > 0 && SCENES[i - 1].out === 'zoom';
-        const vin = i === 0 ? 1 : eo3(prog(t, sc.from - XF, sc.from + XF * 0.6));
-        const vout = last ? 1 : 1 - eo3(prog(t, sc.to - XF * 0.5, sc.to + XF * 0.5));
-        const v = clamp(Math.min(vin, vout));
-        const cam = camera(lt, sc.zooms, dur);
-        const zt = sc.out === 'zoom' ? prog(t, sc.to - 0.55, sc.to + 0.1) : 0;
-        const zs = 1 + 1.4 * zt ** 3;
-        const zin = prevZoom ? lerp(0.93, 1, eo3(prog(lt, -XF, 0.55))) : 1;
+        // push like the welcome video's scroll: the old scene leaves up, the new one arrives from below (expo in-out)
+        const pin = i === 0 || prevZoom ? 1 : expoInOut(prog(t, sc.from - XF, sc.from + XF));
+        const pout = last || sc.out === 'zoom' ? 0 : expoInOut(prog(t, sc.to - XF, sc.to + XF));
+        const dy = 1100 * (1 - pin) - 1100 * pout;
+        const mv = Math.sin(Math.PI * (pin < 1 ? pin : pout));
+        const v = prevZoom ? eo3(prog(t, sc.from - 0.1, sc.from + 0.3)) : 1;
+        const cam = camera(lt, sc.zooms);
+        const zt = sc.out === 'zoom' ? prog(t, sc.to - 0.45, sc.to + 0.05) : 0;
+        const zs = 1 + 1.6 * zt ** 3;
+        const zin = prevZoom ? lerp(0.9, 1, eoexpo(prog(t, sc.from - 0.1, sc.from + 0.5))) : 1;
         const Content = CONTENT[i];
         return (
-          <AbsoluteFill key={i} style={{opacity: v, filter: v < 0.99 ? `blur(${14 * (1 - v)}px)` : undefined}}>
+          <AbsoluteFill key={i} style={{opacity: v, transform: `translateY(${dy}px)`, filter: mv > 0.05 || v < 0.99 ? `blur(${10 * mv + 12 * (1 - v)}px)` : undefined}}>
             <Content lt={lt} part="head" />
             <div
               style={{
@@ -832,6 +869,7 @@ export const TrafficNews: React.FC = () => {
           </AbsoluteFill>
         );
       })}
+      <Flash t={t} />
       <Captions t={t} />
     </AbsoluteFill>
   );

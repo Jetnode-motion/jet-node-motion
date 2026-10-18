@@ -42,7 +42,29 @@ export const SCENES: Scene[] = VO_LINES.map((l, i) => ({
   out: OUT[i],
 }));
 
-export const XF = 0.35;
+/*
+ * Pace matched to the bot welcome video (design/jetnodevpn-bot-menu/welcome-video, v4): the narration is
+ * sped up 1.12× (atempo) and scene animations are designed in "design seconds" that run SPEED× faster,
+ * scenes change with an expo push (like its scroll transitions), elements fly in with expo/back eases and
+ * a glow flashes on the key beats.
+ */
+export const SPEED = 1.12;
+/** half-length of the push transition between scenes */
+export const XF = 0.45;
+/** design time inside scene i → composition time */
+export const at = (i: number, lt: number) => SCENES[i].from + lt / SPEED;
+/** glow flashes on key beats: [scene, design time] */
+export const BEATS: [number, number][] = [
+  [0, 3.2],
+  [1, 2.5],
+  [2, 5.45],
+  [3, 5.65],
+  [4, 6.2],
+  [4, 8.7],
+  [5, 0.4],
+  [6, 7.05],
+  [6, 9.65],
+];
 export const DURATION = VO_END;
 export {VO_OFFSET};
 export const SUBS = VO_SUBS;
