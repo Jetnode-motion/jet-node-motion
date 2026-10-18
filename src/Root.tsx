@@ -1,5 +1,5 @@
 import React from 'react';
-import {Audio, Composition, staticFile} from 'remotion';
+import {Audio, Composition, Sequence, staticFile} from 'remotion';
 import {CameraMotionBlur} from '@remotion/motion-blur';
 import {FPS, H, W} from './style/tokens';
 import './style/fonts';
@@ -9,6 +9,12 @@ import {JetnodeAd} from './compositions/JetnodeAd/Ad';
 import {DURATION as AD_DURATION} from './compositions/JetnodeAd/timeline';
 import {JetnodeAd30} from './compositions/JetnodeAd30/Ad30';
 import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
+import {YandexDcNews} from './compositions/YandexDcNews/News';
+import {DURATION as NEWS_DURATION} from './compositions/YandexDcNews/timeline';
+import {VO_OFFSET} from './compositions/YandexDcNews/vo';
+import {TrafficNews} from './compositions/TrafficNews/News';
+import {DURATION as TRAFFIC_DURATION, VO_OFFSET as TRAFFIC_VO_OFFSET} from './compositions/TrafficNews/timeline';
+import {SFX as TRAFFIC_SFX} from './compositions/TrafficNews/sfx';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -37,6 +43,53 @@ const AdDraft = withSound(JetnodeAd, 'ad.wav', false);
 const Ad30 = withSound(JetnodeAd30, 'ad30.wav', true);
 const Ad30Draft = withSound(JetnodeAd30, 'ad30.wav', false);
 
+// News explainer: one-take ElevenLabs narration (scripts/vo/elevenlabs_story.py), a breath in.
+const withVoice = (blur: boolean): React.FC => {
+  const Wrapped: React.FC = () => (
+    <>
+      {blur ? (
+        <CameraMotionBlur shutterAngle={180} samples={5}>
+          <YandexDcNews />
+        </CameraMotionBlur>
+      ) : (
+        <YandexDcNews />
+      )}
+      <Sequence from={Math.round(VO_OFFSET * FPS)}>
+        <Audio src={staticFile('audio/yandex-dc/story.wav')} />
+      </Sequence>
+    </>
+  );
+  return Wrapped;
+};
+const NewsFinal = withVoice(true);
+const NewsDraft = withVoice(false);
+
+// Reels on the mobile traffic drop: one-take narration plus sound design from public/sfx (copied from the project library).
+const withVoiceAndSfx = (blur: boolean): React.FC => {
+  const Wrapped: React.FC = () => (
+    <>
+      {blur ? (
+        <CameraMotionBlur shutterAngle={180} samples={5}>
+          <TrafficNews />
+        </CameraMotionBlur>
+      ) : (
+        <TrafficNews />
+      )}
+      <Sequence from={Math.round(TRAFFIC_VO_OFFSET * FPS)}>
+        <Audio src={staticFile('audio/traffic/story.wav')} />
+      </Sequence>
+      {TRAFFIC_SFX.map((s, i) => (
+        <Sequence key={i} from={Math.max(0, Math.round((s.at - s.peak) * FPS))}>
+          <Audio src={staticFile(`sfx/${s.file}`)} volume={s.vol} />
+        </Sequence>
+      ))}
+    </>
+  );
+  return Wrapped;
+};
+const TrafficFinal = withVoiceAndSfx(true);
+const TrafficDraft = withVoiceAndSfx(false);
+
 export const RemotionRoot: React.FC = () => (
   <>
     {/* Final render: with motion blur */}
@@ -49,5 +102,11 @@ export const RemotionRoot: React.FC = () => (
     {/* v5: ~30 s ad with voiceover and the real bot */}
     <Composition id="JetnodeAd30" component={Ad30} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
     <Composition id="JetnodeAd30Draft" component={Ad30Draft} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
+    {/* News explainer: strikes on Yandex data centers, with ElevenLabs voice-over */}
+    <Composition id="YandexDcNews" component={NewsFinal} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="YandexDcNewsDraft" component={NewsDraft} durationInFrames={Math.round(NEWS_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    {/* Reels: mobile traffic fell for the first time, with a Jetnode VPN insert */}
+    <Composition id="TrafficNews" component={TrafficFinal} durationInFrames={Math.round(TRAFFIC_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="TrafficNewsDraft" component={TrafficDraft} durationInFrames={Math.round(TRAFFIC_DURATION * FPS)} fps={FPS} width={W} height={H} />
   </>
 );

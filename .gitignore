@@ -4,3 +4,5 @@ out
 # SF Pro is licensed by Apple and must not be published: install it on your machine instead
 public/fonts/SF-*
 public/fonts/SignPainter*
+# SFX come from the project library (/mnt/project-files/sfx): copy them in before rendering
+public/sfx/

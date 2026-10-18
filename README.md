@@ -11,6 +11,7 @@ npx remotion render src/index.ts JetnodePromo out/jetnode-promo.mp4   # final, w
 npx remotion render src/index.ts JetnodePromoDraft out/draft.mp4      # fast preview
 npx remotion render src/index.ts JetnodeAd out/jetnode-ad.mp4         # v4 ad, Privata-style plate animations
 npx remotion render src/index.ts JetnodeAd30 out/jetnode-ad30.mp4     # v5, 30 s with voiceover and the real bot
+npx remotion render src/index.ts YandexDcNews out/yandex-dc-news.mp4  # silent news explainer: strikes on Yandex data centers
 ```
 
 Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. The accent font is **SignPainter HouseScript** (Apple-distributed, not stored here): put `SignPainter-HouseScript.otf` into `public/fonts`. Without it accents fall back to Marck Script (OFL), which ships in `public/fonts`.
@@ -28,3 +29,7 @@ Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). I
 - `legacy/python/` – the first Python/Cairo renderer this promo was ported from
 
 Data in the screens (countries, ping, «12 мс») is placeholder.
+
+### TrafficNews (Reels)
+
+`npx remotion render src/index.ts TrafficNews out/traffic-news.mp4` — news reel «мобильного интернета стало меньше» with a Jetnode VPN insert, in the mixed Shell + glass style. Before rendering copy the fonts (see above) and the sound effects: `public/sfx/` is filled from the project library `/mnt/project-files/sfx` (file names in `src/compositions/TrafficNews/sfx.ts`). Voice: `scripts/vo/elevenlabs_story.py scripts/vo/lines-traffic.json public/audio/traffic`, then sped up 1.12× to the welcome video's pace with `scripts/vo/speed.py` (the committed `story.wav`/`story.json` are already sped up), captions: `scripts/vo/subs.py`.
