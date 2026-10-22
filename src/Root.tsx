@@ -9,6 +9,7 @@ import {JetnodeAd} from './compositions/JetnodeAd/Ad';
 import {DURATION as AD_DURATION} from './compositions/JetnodeAd/timeline';
 import {JetnodeAd30} from './compositions/JetnodeAd30/Ad30';
 import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
+import {Polar7, DURATION as POLAR7_DURATION} from './compositions/Polar7/Polar7';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -36,6 +37,7 @@ const Ad = withSound(JetnodeAd, 'ad.wav', true);
 const AdDraft = withSound(JetnodeAd, 'ad.wav', false);
 const Ad30 = withSound(JetnodeAd30, 'ad30.wav', true);
 const Ad30Draft = withSound(JetnodeAd30, 'ad30.wav', false);
+const Polar7Ep1 = withSound(Polar7, 'polar7.wav', false);
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -49,5 +51,7 @@ export const RemotionRoot: React.FC = () => (
     {/* v5: ~30 s ad with voiceover and the real bot */}
     <Composition id="JetnodeAd30" component={Ad30} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
     <Composition id="JetnodeAd30Draft" component={Ad30Draft} durationInFrames={AD30_DURATION * FPS} fps={FPS} width={W} height={H} />
+    {/* Polar7 part 1: 3D-figurine story series with the JetnodeVPN banner mid-roll and at the end */}
+    <Composition id="Polar7" component={Polar7Ep1} durationInFrames={Math.ceil(POLAR7_DURATION * FPS)} fps={FPS} width={W} height={H} />
   </>
 );

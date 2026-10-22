@@ -10,13 +10,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.17.10",
     "@remotion/cli": "^4.0.535",
     "@remotion/fonts": "^4.0.535",
     "@remotion/motion-blur": "^4.0.535",
+    "@remotion/three": "^4.0.535",
+    "@types/three": "^0.169.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.535",
-    "simple-icons": "^13.21.0"
+    "simple-icons": "^13.21.0",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

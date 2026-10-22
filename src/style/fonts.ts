@@ -9,8 +9,15 @@ export const fontsReady = loadFont({
   weight: '400',
 });
 
-export const accentReady = loadFont({
-  family: 'SignPainter',
-  url: staticFile('fonts/SignPainter-HouseScript.otf'),
-  weight: '400',
-}).catch(() => undefined);
+// Checked with a HEAD request first: a missing file inside loadFont cancels the whole render.
+export const accentReady = fetch(staticFile('fonts/SignPainter-HouseScript.otf'), {method: 'HEAD'})
+  .then((r) =>
+    r.ok ? loadFont({family: 'SignPainter', url: staticFile('fonts/SignPainter-HouseScript.otf'), weight: '400'}) : undefined
+  )
+  .catch(() => undefined);
+
+// JetBrains Mono (OFL) for the typed notes in Polar7.
+export const monoReady = Promise.all([
+  loadFont({family: 'JetBrains Mono', url: staticFile('fonts/JetBrainsMono-Regular.ttf'), weight: '400'}),
+  loadFont({family: 'JetBrains Mono', url: staticFile('fonts/JetBrainsMono-Bold.ttf'), weight: '700'}),
+]);
