@@ -7,12 +7,12 @@ import {FONT} from '../Polar7/Overlays';
  * incoming ones are preceded by «печатает…». Only the last few stay on screen.
  */
 
-export type ChatMsg = {at: number; side: 'in' | 'out' | string; text: string};
+export type ChatMsg = {at: number; side: 'in' | 'out' | 'sys' | string; text: string; time?: string};
 
 const TYPING = 0.7; // s of «печатает…» before an incoming message
-const clock = (i: number) => `01:${String(4 + i).padStart(2, '0')}`;
+const clock = (i: number, from: number) => `01:${String(from + i).padStart(2, '0')}`;
 
-export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: number; keep?: number}> = ({t, msgs, show, y = 200, keep = 4}) => {
+export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: number; keep?: number; clockFrom?: number}> = ({t, msgs, show, y = 200, keep = 4, clockFrom = 4}) => {
   if (show <= 0) return null;
   const k = eo3(show);
   const seen = msgs.map((m, i) => ({...m, i})).filter((m) => t >= m.at);
@@ -46,6 +46,12 @@ export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: numbe
         {shown.map((m) => {
           const e = eback(prog(t, m.at, m.at + 0.3), 1.6);
           const out = m.side === 'out';
+          if (m.side === 'sys')
+            return (
+              <div key={m.i} style={{alignSelf: 'center', background: 'rgba(255,255,255,0.08)', color: '#9FB0C2', fontSize: 26, padding: '8px 20px', borderRadius: 20, opacity: e}}>
+                {m.text}
+              </div>
+            );
           return (
             <div
               key={m.i}
@@ -64,7 +70,7 @@ export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: numbe
             >
               {m.text}
               <span style={{fontSize: 20, color: out ? '#9DC3E6' : '#6D7F8F', marginLeft: 14}}>
-                {clock(m.i)}
+                {m.time ?? clock(m.i, clockFrom)}
                 {out ? ' ✓✓' : ''}
               </span>
             </div>

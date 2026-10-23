@@ -320,14 +320,14 @@ export const Glitch: React.FC<{t: number; at: number; dur?: number}> = ({t, at, 
  * The JetnodeVPN banner: the real bot banner on a dark card with the «Реклама» mark.
  * `variant="end"` adds the call to subscribe for part 2.
  */
-export const BannerCard: React.FC<{t: number; d: number; variant: 'mid' | 'end'; series?: string}> = ({t, d, variant, series = 'ПОЛЯРНАЯ-7'}) => {
+export const BannerCard: React.FC<{t: number; d: number; variant: 'mid' | 'end'; series?: string; next?: number}> = ({t, d, variant, series = 'ПОЛЯРНАЯ-7', next = 2}) => {
   const k = eback(prog(t, 0.05, 0.6), 1.4);
   const o = 1 - prog(t, d - 0.3, d);
   const glow = 0.5 + 0.5 * Math.sin(t * 2.4);
   return (
     <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 40%, #0E1E46 0%, #050B1E 70%)', opacity: o}}>
       <div style={{position: 'absolute', top: 250, width: '100%', textAlign: 'center', fontFamily: MONO, fontSize: 26, letterSpacing: 6, color: '#7F93C8'}}>
-        {variant === 'mid' ? `ПАУЗА · ${series} ВЕРНЁТСЯ` : `${series} · ЧАСТЬ 2 СКОРО`}
+        {variant === 'mid' ? `ПАУЗА · ${series} ВЕРНЁТСЯ` : `${series} · ЧАСТЬ ${next} СКОРО`}
       </div>
       <div
         style={{
@@ -365,7 +365,7 @@ export const BannerCard: React.FC<{t: number; d: number; variant: 'mid' | 'end';
         </div>
         {variant === 'end' && (
           <div style={{fontFamily: FONT, fontWeight: 700, fontSize: 36, color: '#fff', marginTop: 46, opacity: eo3(prog(t, 1.2, 1.6))}}>
-            Подпишись, чтобы не пропустить 2 часть
+            Подпишись, чтобы не пропустить {next} часть
           </div>
         )}
       </div>

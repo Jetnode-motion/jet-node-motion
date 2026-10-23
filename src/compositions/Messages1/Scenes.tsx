@@ -25,6 +25,16 @@ export const CAMS: Record<string, CamSpec> = {
   window: {from: [-1.4, 1.6, 2.4], to: [-1.0, 1.5, 1.7], look: [0.2, 1.3, -1.6]},
   voice: {from: [0, 0.9, 2.4], to: [0, 0.6, 1.4], look: [0, 0.3, -1.5]},
   last: {from: [1.5, 1.6, 2.4], to: [1.1, 1.5, 1.7], look: [0, 1.15, 0]},
+  // part 2
+  reread: {from: [-1.3, 1.5, 2.1], to: [-0.85, 1.45, 1.45], look: [0, 1.15, 0]},
+  quiet: {from: [0, 1.3, 2.8], to: [0, 1.0, 1.7], look: [0, 0.4, -1.8]},
+  chat: {from: [0.55, 1.8, 1.9], to: [0.42, 1.72, 1.45], look: [0, 1.1, -1.5]},
+  prints: {from: [-0.4, 1.25, 1.9], to: [-0.3, 1.0, 1.4], look: [0.2, 0.1, -1.0]},
+  roomdoor: {from: [-1.0, 1.55, 1.85], to: [-0.7, 1.5, 1.45], look: [1.2, 0.75, 0.3]},
+  bedroom: {from: [1.7, 1.65, 2.3], to: [1.25, 1.5, 1.65], look: [0, 0.55, -0.1]},
+  send: {from: [0.9, 1.35, 1.3], to: [0.62, 1.3, 0.95], look: [0, 1.15, 0.4]},
+  wake: {from: [0.55, 2.2, 0.35], to: [0.3, 1.75, -0.1], look: [-0.1, 0.7, -0.6]},
+  behind: {from: [0.3, 1.55, 2.5], to: [0.2, 1.5, 1.85], look: [0.15, 1.25, -0.5]},
 };
 
 const camAt = (c: CamSpec, k: number) => {
@@ -34,7 +44,7 @@ const camAt = (c: CamSpec, k: number) => {
   return {pos: L3(c.from, c.to), look: L3(c.look, lt), fov: c.fov ?? 50};
 };
 
-const Cam: React.FC<{id: string; k: number; shake?: number}> = ({id, k, shake = 0}) => {
+export const Cam: React.FC<{id: string; k: number; shake?: number}> = ({id, k, shake = 0}) => {
   const {camera} = useThree();
   const c = camAt(CAMS[id], k);
   camera.position.copy(c.pos).add(new THREE.Vector3(Math.sin(k * 97) * shake, Math.cos(k * 83) * shake, 0));
@@ -55,7 +65,7 @@ export const project = (id: string, k: number, p: V3, w = 1080, h = 1920) => {
   return {x: (v.x * 0.5 + 0.5) * w, y: (-v.y * 0.5 + 0.5) * h};
 };
 
-const Base: React.FC<{amb?: number; fog?: string; near?: number; far?: number; children: React.ReactNode}> = ({amb = 0.1, fog = '#05060A', near = 4, far = 14, children}) => (
+export const Base: React.FC<{amb?: number; fog?: string; near?: number; far?: number; children: React.ReactNode}> = ({amb = 0.1, fog = '#05060A', near = 4, far = 14, children}) => (
   <>
     <color attach="background" args={[fog]} />
     <fog attach="fog" args={[fog, near, far]} />
@@ -64,11 +74,11 @@ const Base: React.FC<{amb?: number; fog?: string; near?: number; far?: number; c
   </>
 );
 
-const HOODIE = '#55585F';
-const COLYA = '#7A5A3E'; // the neighbour's cardigan
+export const HOODIE = '#55585F';
+export const COLYA = '#7A5A3E'; // the neighbour's cardigan
 
 /** Phone: dark slab with a lit screen that throws cold light around it. */
-const Phone: React.FC<{p: V3; rot?: V3; lit?: number}> = ({p, rot = [-Math.PI / 2, 0, 0], lit = 1}) => (
+export const Phone: React.FC<{p: V3; rot?: V3; lit?: number}> = ({p, rot = [-Math.PI / 2, 0, 0], lit = 1}) => (
   <group position={p} rotation={rot}>
     <mesh castShadow>
       <boxGeometry args={[0.08, 0.16, 0.01]} />
@@ -82,7 +92,7 @@ const Phone: React.FC<{p: V3; rot?: V3; lit?: number}> = ({p, rot = [-Math.PI / 
   </group>
 );
 
-const Bed: React.FC<{p?: V3}> = ({p = [0, 0, 0]}) => (
+export const Bed: React.FC<{p?: V3}> = ({p = [0, 0, 0]}) => (
   <group position={p}>
     <Box p={[0, 0.2, 0]} s={[1.0, 0.4, 2.0]} c={P.woodDark} />
     <Box p={[0, 0.45, 0]} s={[0.95, 0.12, 1.95]} c="#B8B2A6" r={1} />
@@ -92,7 +102,7 @@ const Bed: React.FC<{p?: V3}> = ({p = [0, 0, 0]}) => (
 );
 
 /** Front door with a peephole and the strip of landing light under it. */
-const Door: React.FC<{z?: number; gap?: number; feet?: number}> = ({z = -1.95, gap = 1, feet = 0}) => (
+export const Door: React.FC<{z?: number; gap?: number; feet?: number}> = ({z = -1.95, gap = 1, feet = 0}) => (
   <group position={[0, 0, z]}>
     <Box p={[0, 1.05, 0]} s={[0.95, 2.1, 0.08]} c="#4A3A30" r={0.6} />
     <Box p={[0, 1.05, -0.01]} s={[1.1, 2.2, 0.06]} c="#2A2420" />
@@ -120,8 +130,34 @@ const Door: React.FC<{z?: number; gap?: number; feet?: number}> = ({z = -1.95, g
   </group>
 );
 
+/** Wet barefoot prints on the floor, from one point to another, the first `shown` of them visible. */
+export const Prints: React.FC<{from: [number, number]; to: [number, number]; n: number; shown?: number}> = ({from, to, n, shown = n}) => {
+  const ang = Math.atan2(to[0] - from[0], to[1] - from[1]);
+  return (
+    <>
+      {Array.from({length: Math.min(n, Math.ceil(shown))}, (_, i) => {
+        const f = i / (n - 1);
+        const side = i % 2 ? 1 : -1;
+        const x = lerp(from[0], to[0], f) + Math.cos(ang) * 0.07 * side;
+        const z = lerp(from[1], to[1], f) - Math.sin(ang) * 0.07 * side;
+        const op = Math.min(1, shown - i);
+        return (
+          <group key={i} position={[x, 0.004 + i * 0.0002, z]} rotation={[0, ang, 0]}>
+            {[[0, 0.035, 0.05, 0.075], [0, -0.06, 0.04, 0.05]].map(([px, pz, rx, rz], j) => (
+              <mesh key={j} position={[px, 0, pz]} rotation={[-Math.PI / 2, 0, 0]} scale={[rx, rz, 1]}>
+                <circleGeometry args={[1, 20]} />
+                <meshStandardMaterial color="#101215" roughness={0.05} metalness={0.5} transparent opacity={0.9 * op} />
+              </mesh>
+            ))}
+          </group>
+        );
+      })}
+    </>
+  );
+};
+
 /** 1. Bedroom from above: he lies in the dark, the phone lights up on the blanket. */
-export const PhoneOnBed: React.FC<SceneProps & {id?: string; buzz?: number}> = ({t, d, id = 'phone', buzz = 0}) => {
+export const PhoneOnBed: React.FC<SceneProps & {id?: string; buzz?: number; eyes?: number; prints?: boolean}> = ({t, d, id = 'phone', buzz = 0, eyes = 0, prints = false}) => {
   const jitter = buzz > 0 && Math.floor(t * 18) % 2 ? 0.004 : 0;
   return (
     <Base amb={0.06}>
@@ -137,6 +173,20 @@ export const PhoneOnBed: React.FC<SceneProps & {id?: string; buzz?: number}> = (
         <sphereGeometry args={[0.16, 20, 16]} />
         <meshStandardMaterial color={P.skin} roughness={0.85} />
       </mesh>
+      {eyes > 0 &&
+        [-0.055, 0.055].map((x, i) => (
+          <group key={i} position={[-0.1 + x, 0.865, -0.63]} scale={[1, 1, Math.max(0.05, eyes)]}>
+            <mesh>
+              <sphereGeometry args={[0.024, 14, 10]} />
+              <meshStandardMaterial color="#F2F0EA" emissive="#9CC2FF" emissiveIntensity={0.25} />
+            </mesh>
+            <mesh position={[0, 0.018, 0]}>
+              <sphereGeometry args={[0.012, 10, 8]} />
+              <meshBasicMaterial color="#000" />
+            </mesh>
+          </group>
+        ))}
+      {prints && <Prints from={[1.6, 1.8]} to={[0.62, 0.2]} n={7} />}
       <Phone p={[0.18 + jitter, 0.575, 0.12]} rot={[-Math.PI / 2, 0, 0.35]} />
       <pointLight position={[2, 2.5, 1]} intensity={0.6} distance={6} color="#5B78B8" />
     </Base>
@@ -261,9 +311,9 @@ export const AtWindow: React.FC<SceneProps> = ({t, d}) => (
 );
 
 /** Last: close on him with the phone in the dark. */
-export const LastMsg: React.FC<SceneProps> = ({t, d}) => (
+export const LastMsg: React.FC<SceneProps & {id?: string}> = ({t, d, id = 'last'}) => (
   <Base amb={0.02}>
-    <Cam id="last" k={t / d} />
+    <Cam id={id} k={t / d} />
     <Room wall="#161A24" floor="#101014" w={4} d={4} h={2.7} />
     <Figure p={[0, 0, 0]} coat={HOODIE} hood={false} eyes pose={{armL: 1.1, armR: 1.1, tilt: 0.3, breath: t / 2.5}} />
     <Phone p={[0, 1.15, 0.5]} rot={[-0.6, 0, 0]} lit={1.4} />

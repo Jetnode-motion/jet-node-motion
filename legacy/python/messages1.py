@@ -41,6 +41,9 @@ LINES = [
     ('last', '[quietly] «Я не успел. Теперь твоя очередь писать».', '«Я не успел. Теперь *твоя очередь* писать»', 0.2),
     ('end', 'Продолжение — во второй части.', 'Продолжение — во *второй* части', 0.9),
 ]
+# Scenes where the score adds the pulse (tension) or the music box (eerie).
+TENSION = ['door', 'peep', 'bed2', 'door2', 'window']
+EERIE = ['phone', 'bed', 'memory', 'last', 'end']
 TAIL = 6.0  # the end card: «часть 2» title, then the JetnodeVPN banner
 
 # Mid-roll (ad option C): a silent JetnodeVPN push notification, (line 1-based, offset, seconds on screen).
@@ -202,8 +205,8 @@ def score(D, sc):
                 m = np.maximum(m, win(n, sc[i][0], sc[i][1], fade))
         return m
 
-    tension = mask(['door', 'peep', 'bed2', 'door2', 'window'])
-    eerie = mask(['phone', 'bed', 'memory', 'last', 'end'])
+    tension = mask(TENSION)
+    eerie = mask(EERIE)
     calm = np.zeros(n, np.float32)
     silent = mask(['voice'], 0.3)
 
@@ -229,6 +232,39 @@ def score(D, sc):
 
 def sfx(name):
     return load(os.path.join(SFX_DIR, name))
+
+
+def dingdong():
+    s = np.zeros(int(SR * 1.6), np.float32)
+    for k, f in enumerate([659.3, 523.3]):
+        x = note(f, 1.2) * 0.6
+        j = int(k * 0.42 * SR)
+        s[j:j + len(x)] += x[: len(s) - j]
+    return reverb(s, 0.3)
+
+
+def episode_cues(data, sc, add, out, n):
+    """Sound design tied to this episode's scenes (another episode swaps this function)."""
+    dd = dingdong()
+    add(dd, sc['door'][0] + 0.15, 0.55)
+    a, b = sc['door2']
+    for x in np.arange(a + 0.1, b, 1.25):
+        add(dd, x, 0.32)
+    # rain under the memory
+    a, b = sc['memory']
+    rain = lp(rng.normal(0, 1, n).astype(np.float32), 0.3) * win(n, a - 0.3, b + 0.3, 0.6)
+    out += rain * 0.05
+    # whooshes and glitches on the turns
+    add(sfx('whoosh/Swoosh.wav'), sc['block'][0] - 0.2, 0.35)
+    add(sfx('glitch/Glitch.wav'), sc['bed2'][0], 0.5)
+    add(sfx('glitch/Glitch 3.wav'), sc['voice'][0], 0.6)
+    add(sfx('ping-notify/Ping 3.mp3'), data['push']['at'], 0.3)
+    add(sfx('whoosh/Whoosh.wav'), sc['memory'][0] - 0.5, 0.3)
+    add(sfx('riser-drop/Rise Up.wav'), sc['last'][0] - 2.35, 0.35)
+    add(sfx('riser-drop/Drop.wav'), sc['last'][0], 0.45)
+    add(sfx('ping-notify/Ping.wav'), sc['end'][0] + 3.4, 0.25)
+    # light switch at «Свет погас»
+    add(sfx('click-pop/Click.wav'), data['lines'][14]['at'] + 0.6, 0.6)
 
 
 def build_mix(data):
@@ -262,40 +298,15 @@ def build_mix(data):
     buzz = (np.sign(np.sin(2 * np.pi * 150 * T(0.5))) * 0.15 * (np.sin(2 * np.pi * 9 * T(0.5)) > 0)).astype(np.float32)
     buzz = lp(buzz, 0.15) * 3
     for c in data['chat']:
+        if c['at'] < 0.3:  # already on screen when the episode opens
+            continue
         if c['side'] == 'in':
             add(ping, c['at'], 0.28)
             add(buzz, c['at'] + 0.05, 0.35)
         else:
             add(sfx('click-pop/Pop 2.mp3'), c['at'], 0.4)
 
-    def dingdong():
-        s = np.zeros(int(SR * 1.6), np.float32)
-        for k, f in enumerate([659.3, 523.3]):
-            x = note(f, 1.2) * 0.6
-            j = int(k * 0.42 * SR)
-            s[j:j + len(x)] += x[: len(s) - j]
-        return reverb(s, 0.3)
-
-    dd = dingdong()
-    add(dd, sc['door'][0] + 0.15, 0.55)
-    a, b = sc['door2']
-    for x in np.arange(a + 0.1, b, 1.25):
-        add(dd, x, 0.32)
-    # rain under the memory
-    a, b = sc['memory']
-    rain = lp(rng.normal(0, 1, n).astype(np.float32), 0.3) * win(n, a - 0.3, b + 0.3, 0.6)
-    out += rain * 0.05
-    # whooshes and glitches on the turns
-    add(sfx('whoosh/Swoosh.wav'), sc['block'][0] - 0.2, 0.35)
-    add(sfx('glitch/Glitch.wav'), sc['bed2'][0], 0.5)
-    add(sfx('glitch/Glitch 3.wav'), sc['voice'][0], 0.6)
-    add(sfx('ping-notify/Ping 3.mp3'), data['push']['at'], 0.3)
-    add(sfx('whoosh/Whoosh.wav'), sc['memory'][0] - 0.5, 0.3)
-    add(sfx('riser-drop/Rise Up.wav'), sc['last'][0] - 2.35, 0.35)
-    add(sfx('riser-drop/Drop.wav'), sc['last'][0], 0.45)
-    add(sfx('ping-notify/Ping.wav'), sc['end'][0] + 3.4, 0.25)
-    # light switch at «Свет погас»
-    add(sfx('click-pop/Click.wav'), data['lines'][14]['at'] + 0.6, 0.6)
+    episode_cues(data, sc, add, out, n)
 
     out += vo
     out /= max(1.0, np.abs(out).max() / 0.95)
