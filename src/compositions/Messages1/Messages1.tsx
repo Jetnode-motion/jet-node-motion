@@ -7,11 +7,12 @@ import {eo3, prog} from '../../style/ease';
 import data from './timeline.json';
 import {AtWindow, Block, Hall, Landing, LastMsg, Memory, PhoneOnBed, SceneProps, SitBed, project} from './Scenes';
 import {Chat, ChatMsg} from './Chat';
+import {Push} from './Push';
 import {BannerCard, Captions, FONT, Glitch, Line, MONO, Pill, RED, TopTag, Vignette, buildChunks} from '../Polar7/Overlays';
 
 /*
  * «Переписка», part 1 «Не открывай»: a chat-story (the «Взахлёб» way of telling it) in the
- * 3D-figurine format. JetnodeVPN banner once in the middle and once at the end.
+ * 3D-figurine format. Ads: a silent JetnodeVPN push notification mid-story, the banner at the end.
  * Timings come from legacy/python/messages1.py, which writes timeline.json from the voiceover.
  */
 
@@ -22,9 +23,10 @@ const MSGS = data.chat as ChatMsg[];
 const SC = Object.fromEntries(data.scenes.map((s) => [s.id, s])) as Record<string, {id: string; frm: number; to: number}>;
 const L = (n: number) => LINES[n - 1].at;
 const END_TITLE = 3.4;
+const PUSH = data.push as {at: number; dur: number};
 
 const CHUNKS = buildChunks(
-  LINES.filter((l) => l.scene !== 'banner'),
+  LINES,
   ['phone', 'bed2', 'voice', 'last']
 );
 
@@ -136,9 +138,8 @@ const EndTitle: React.FC<{t: number}> = ({t}) => {
 export const Messages1: React.FC = () => {
   const frame = useCurrentFrame();
   const t = frame / FPS;
-  const banner = SC.banner;
   const end = SC.end;
-  const inBanner = (t >= banner.frm && t < banner.to) || t >= end.frm;
+  const inEnd = t >= end.frm;
   return (
     <AbsoluteFill style={{background: '#000'}}>
       {data.scenes
@@ -150,13 +151,11 @@ export const Messages1: React.FC = () => {
         ))}
       <Vignette />
       <Overlays t={t} />
-      <Sequence from={Math.round(banner.frm * FPS)} durationInFrames={Math.round((banner.to - banner.frm) * FPS)} name="banner">
-        <BannerCard t={t - banner.frm} d={banner.to - banner.frm} variant="mid" series={SERIES} />
-      </Sequence>
+      <Push t={t} at={PUSH.at} dur={PUSH.dur} />
       <Sequence from={Math.round(end.frm * FPS)} name="end">
         {t - end.frm < END_TITLE ? <EndTitle t={t - end.frm} /> : <BannerCard t={t - end.frm - END_TITLE} d={1e9} variant="end" series={SERIES} />}
       </Sequence>
-      {!inBanner && <Captions t={t} chunks={CHUNKS} />}
+      {!inEnd && <Captions t={t} chunks={CHUNKS} />}
       {t >= end.frm && t - end.frm < END_TITLE && <Captions t={t} chunks={CHUNKS} y={1250} />}
     </AbsoluteFill>
   );

@@ -1,11 +1,12 @@
 """«Переписка», part 1 «Не открывай»: voiceover (ElevenLabs), timeline and soundtrack with a mood score.
 
-usage: ELEVENLABS_API_KEY=... python3 messages1.py [--no-tts]
+usage: ELEVENLABS_API_KEY=... python3 messages1.py [--no-tts | --recording take.m4a]
 Writes public/audio/messages1/*.mp3, public/audio/messages1.wav and src/compositions/Messages1/timeline.json.
 --no-tts reuses the voice files already on disk (the free ElevenLabs plan has a small monthly quota).
+--recording cuts Nazar's own take into lines (lNN.wav, used instead of the synthesized mp3s).
 SFX come from the project sound library (SFX_DIR, default /mnt/project-files/sfx).
 """
-import json, os, subprocess, sys, urllib.request
+import difflib, json, os, re, subprocess, sys, urllib.request
 import numpy as np
 from scipy.signal import lfilter
 
@@ -30,7 +31,6 @@ LINES = [
     ('peep', 'Я посмотрел в глазок. На площадке стоял сосед, дядя Коля. В тапках, с пустой кружкой.', 'На площадке стоял сосед, *дядя Коля.* В тапках, с пустой кружкой.', 0.25),
     ('peep', '«Соль не одолжишь?» В час ночи.', '«Соль не одолжишь?» В *час ночи.*', 0.2),
     ('bed2', 'Телефон снова завибрировал. «Дядя Коля умер в прошлом году. Ты был на похоронах».', '«Дядя Коля умер в прошлом году. Ты был *на похоронах*»', 0.3),
-    ('banner', 'Секунду. Интернет по белым спискам? Джетноуд ВПН работает даже там. Три дня бесплатно — ссылка в профиле.', 'JetnodeVPN работает даже по белым спискам', 0.6),
     ('memory', 'Я правда был на похоронах. Помню венок. Помню дождь.', 'Я правда был на похоронах. Помню венок. Помню *дождь.*', 0.6),
     ('door2', 'А звонок всё звенел. Ровно. Без пауз.', 'А звонок всё звенел. Ровно. *Без пауз.*', 0.25),
     ('door2', 'Я написал: «Что мне делать?»', 'Я написал: «Что мне *делать?*»', 0.2),
@@ -39,9 +39,12 @@ LINES = [
     ('voice', '[whispers] «Открой. Это я. Я тебе писал».', '«Открой. Это я. *Я тебе писал*»', 0.3),
     ('last', 'Телефон в руке загорелся последним сообщением.', 'Телефон загорелся *последним* сообщением', 0.35),
     ('last', '[quietly] «Я не успел. Теперь твоя очередь писать».', '«Я не успел. Теперь *твоя очередь* писать»', 0.2),
-    ('end', 'Продолжение — во второй части. А пока — Джетноуд ВПН, три дня бесплатно.', 'Продолжение — во *второй* части', 0.9),
+    ('end', 'Продолжение — во второй части.', 'Продолжение — во *второй* части', 0.9),
 ]
-TAIL = 3.0
+TAIL = 6.0  # the end card: «часть 2» title, then the JetnodeVPN banner
+
+# Mid-roll (ad option C): a silent JetnodeVPN push notification, (line 1-based, offset, seconds on screen).
+PUSH = (11, 0.3, 4.0)
 
 # Messenger events: (line index 1-based, offset from line start, side, text). 'in' = from «Я», 'out' = the narrator.
 CHAT = [
@@ -51,11 +54,11 @@ CHAT = [
     (6, 0.6, 'in', 'Ты. Только на 10 минут позже.'),
     (10, 0.9, 'in', 'Дядя Коля умер в прошлом году.'),
     (10, 2.8, 'in', 'Ты был на похоронах.'),
-    (14, 0.6, 'out', 'Что мне делать?'),
-    (15, 0.2, 'in', 'Выключи свет. Встань у окна.'),
-    (15, 2.0, 'in', 'И не отвечай ему, что бы он ни говорил.'),
-    (19, 0.4, 'in', 'Я не успел.'),
-    (19, 1.4, 'in', 'Теперь твоя очередь писать.'),
+    (13, 0.6, 'out', 'Что мне делать?'),
+    (14, 0.2, 'in', 'Выключи свет. Встань у окна.'),
+    (14, 2.0, 'in', 'И не отвечай ему, что бы он ни говорил.'),
+    (18, 0.4, 'in', 'Я не успел.'),
+    (18, 1.4, 'in', 'Теперь твоя очередь писать.'),
 ]
 
 
@@ -82,7 +85,12 @@ def trim(a, thr=0.01):
 
 
 def vo_path(i):
+    # Nazar's own recording (cut by import_recording) wins over the synthesized take.
+    own = os.path.join(VO_DIR, f'l{i + 1:02d}.wav')
+    if os.path.exists(own):
+        return own
     return os.path.join(VO_DIR, f'l{i + 1:02d}.mp3')
+
 
 
 def build_voice():
@@ -108,8 +116,10 @@ def build_timeline():
     scenes[0]['frm'] = 0
     total = round(t + TAIL, 2)
     scenes[-1]['to'] = total
+    pl, po, pd = PUSH
+    push = dict(at=round(lines[pl - 1]['at'] + po, 3), dur=pd)
     chat = [dict(at=round(lines[li - 1]['at'] + off, 3), side=side, text=txt) for li, off, side, txt in CHAT]
-    data = dict(duration=total, lines=lines, scenes=scenes, chat=chat)
+    data = dict(duration=total, lines=lines, scenes=scenes, chat=chat, push=push)
     os.makedirs(os.path.dirname(OUT_JSON), exist_ok=True)
     with open(OUT_JSON, 'w') as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
@@ -194,7 +204,7 @@ def score(D, sc):
 
     tension = mask(['door', 'peep', 'bed2', 'door2', 'window'])
     eerie = mask(['phone', 'bed', 'memory', 'last', 'end'])
-    calm = mask(['banner'])
+    calm = np.zeros(n, np.float32)
     silent = mask(['voice'], 0.3)
 
     pulse = np.zeros(n, np.float32)
@@ -279,14 +289,13 @@ def build_mix(data):
     add(sfx('whoosh/Swoosh.wav'), sc['block'][0] - 0.2, 0.35)
     add(sfx('glitch/Glitch.wav'), sc['bed2'][0], 0.5)
     add(sfx('glitch/Glitch 3.wav'), sc['voice'][0], 0.6)
-    add(sfx('whoosh/Whoosh.wav'), sc['banner'][0] - 0.5, 0.3)
-    add(sfx('ping-notify/Ping.wav'), sc['banner'][0] + 0.1, 0.25)
+    add(sfx('ping-notify/Ping 3.mp3'), data['push']['at'], 0.3)
     add(sfx('whoosh/Whoosh.wav'), sc['memory'][0] - 0.5, 0.3)
     add(sfx('riser-drop/Rise Up.wav'), sc['last'][0] - 2.35, 0.35)
     add(sfx('riser-drop/Drop.wav'), sc['last'][0], 0.45)
     add(sfx('ping-notify/Ping.wav'), sc['end'][0] + 3.4, 0.25)
     # light switch at «Свет погас»
-    add(sfx('click-pop/Click.wav'), data['lines'][15]['at'] + 0.6, 0.6)
+    add(sfx('click-pop/Click.wav'), data['lines'][14]['at'] + 0.6, 0.6)
 
     out += vo
     out /= max(1.0, np.abs(out).max() / 0.95)
@@ -298,8 +307,73 @@ def build_mix(data):
         w.writeframes(pcm.tobytes())
 
 
+# ---------------- Nazar's own recording
+def _norm(w):
+    return re.sub(r'[^а-яa-z0-9]', '', w.lower().replace('ё', 'е'))
+
+
+def import_recording(path):
+    """One continuous take with all lines (numbers said between them, retakes allowed) -> l01.wav … lNN.wav.
+
+    ElevenLabs speech-to-text gives word timings; each script line is matched to the last good take of it
+    (a retake comes right after the bad one), then cut, de-noised, EQ'd and compressed.
+    """
+    req = urllib.request.Request('https://api.elevenlabs.io/v1/speech-to-text', method='POST')
+    boundary = 'polar7boundary'
+    with open(path, 'rb') as f:
+        audio = f.read()
+    parts = []
+    for k, v in (('model_id', 'scribe_v1'), ('language_code', 'rus')):
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+    parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="take"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode() + audio + b'\r\n')
+    parts.append(f'--{boundary}--\r\n'.encode())
+    req.data = b''.join(parts)
+    req.add_header('xi-api-key', os.environ['ELEVENLABS_API_KEY'])
+    req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+    with urllib.request.urlopen(req, timeout=600) as r:
+        stt = json.loads(r.read())
+    words = [w for w in stt['words'] if w['type'] == 'word' and _norm(w['text'])]
+    toks = [_norm(w['text']) for w in words]
+
+    def matches(line, frm):
+        target = [_norm(w) for w in re.sub(r'\[[a-z ]+\]', '', line).split() if _norm(w)]
+        n = len(target)
+        out = []
+        for i in range(frm, len(toks) - max(1, n // 2) + 1):
+            for m in (n - 1, n, n + 1):
+                if m < 1 or i + m > len(toks):
+                    continue
+                r = difflib.SequenceMatcher(None, target, toks[i:i + m]).ratio()
+                if r >= 0.6:
+                    out.append((i, i + m, r))
+        return out
+
+    cuts, pos = [], 0
+    for li, (_, text, _, _) in enumerate(LINES):
+        cand = matches(text, pos)
+        if not cand:
+            raise SystemExit(f'line {li + 1} not found in the recording: {text}')
+        best = max(c[2] for c in cand)
+        good = [c for c in cand if c[2] >= best - 0.1]
+        # the next line's first good take bounds the retakes of this one
+        nxt = matches(LINES[li + 1][1], good[0][1]) if li + 1 < len(LINES) else []
+        limit = min((c[0] for c in nxt if c[2] >= 0.75), default=len(toks))
+        good = [c for c in good if c[0] < limit] or good[:1]
+        a, b, r = max(good, key=lambda c: (c[0], c[2]))
+        cuts.append((words[a]['start'], words[b - 1]['end']))
+        pos = b
+        print(f'line {li + 1:2d}  {words[a]["start"]:7.2f}–{words[b - 1]["end"]:7.2f}  match {r:.2f}')
+    os.makedirs(VO_DIR, exist_ok=True)
+    chain = 'highpass=f=80,afftdn=nf=-28,lowpass=f=12000,acompressor=threshold=-20dB:ratio=3:attack=8:release=120:makeup=3,alimiter=limit=0.9'
+    for li, (a, b) in enumerate(cuts):
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', path, '-ss', f'{max(0, a - 0.12):.3f}', '-to', f'{b + 0.3:.3f}',
+                        '-af', chain, '-ac', '1', '-ar', str(SR), os.path.join(VO_DIR, f'l{li + 1:02d}.wav')], check=True)
+
+
 if __name__ == '__main__':
-    if '--no-tts' not in sys.argv:
+    if '--recording' in sys.argv:
+        import_recording(sys.argv[sys.argv.index('--recording') + 1])
+    elif '--no-tts' not in sys.argv:
         build_voice()
     d = build_timeline()
     build_mix(d)
