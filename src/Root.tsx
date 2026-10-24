@@ -12,6 +12,7 @@ import {DURATION as AD30_DURATION} from './compositions/JetnodeAd30/timeline';
 import {Polar7, DURATION as POLAR7_DURATION} from './compositions/Polar7/Polar7';
 import {Messages1, DURATION as MESSAGES1_DURATION} from './compositions/Messages1/Messages1';
 import {Messages2, DURATION as MESSAGES2_DURATION} from './compositions/Messages2/Messages2';
+import {Messages2Cover} from './compositions/Messages2/Cover';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -61,5 +62,6 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Messages1" component={Messages1Ep} durationInFrames={Math.ceil(MESSAGES1_DURATION * FPS)} fps={FPS} width={W} height={H} />
     {/* «Переписка» part 2 «Твоя очередь» */}
     <Composition id="Messages2" component={Messages2Ep} durationInFrames={Math.ceil(MESSAGES2_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="Messages2Cover" component={Messages2Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
   </>
 );
