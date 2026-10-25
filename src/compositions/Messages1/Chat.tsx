@@ -12,7 +12,7 @@ export type ChatMsg = {at: number; side: 'in' | 'out' | 'sys' | string; text: st
 const TYPING = 0.7; // s of «печатает…» before an incoming message
 const clock = (i: number, from: number) => `01:${String(from + i).padStart(2, '0')}`;
 
-export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: number; keep?: number; clockFrom?: number}> = ({t, msgs, show, y = 200, keep = 4, clockFrom = 4}) => {
+export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: number; keep?: number; clockFrom?: number; name?: string; status?: string}> = ({t, msgs, show, y = 200, keep = 4, clockFrom = 4, name = 'Я', status = 'был(а) только что'}) => {
   if (show <= 0) return null;
   const k = eo3(show);
   const seen = msgs.map((m, i) => ({...m, i})).filter((m) => t >= m.at);
@@ -36,10 +36,10 @@ export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: numbe
       }}
     >
       <div style={{display: 'flex', alignItems: 'center', gap: 20, padding: '22px 28px', background: '#17212B'}}>
-        <div style={{width: 62, height: 62, borderRadius: 31, background: 'linear-gradient(135deg,#5B8DEF,#2B5278)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 30}}>Я</div>
+        <div style={{width: 62, height: 62, borderRadius: 31, background: 'linear-gradient(135deg,#5B8DEF,#2B5278)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 30}}>{name[0]}</div>
         <div>
-          <div style={{color: '#fff', fontWeight: 700, fontSize: 32}}>Я</div>
-          <div style={{color: typing ? '#6AB3F3' : '#7F91A4', fontSize: 24}}>{typing ? 'печатает…' : 'был(а) только что'}</div>
+          <div style={{color: '#fff', fontWeight: 700, fontSize: 32}}>{name}</div>
+          <div style={{color: typing ? '#6AB3F3' : '#7F91A4', fontSize: 24}}>{typing ? 'печатает…' : status}</div>
         </div>
       </div>
       <div style={{padding: '20px 24px 24px', display: 'flex', flexDirection: 'column', gap: 12, minHeight: 120}}>
@@ -68,7 +68,8 @@ export const Chat: React.FC<{t: number; msgs: ChatMsg[]; show: number; y?: numbe
                 transformOrigin: out ? 'right bottom' : 'left bottom',
               }}
             >
-              {m.text}
+              {m.text.includes('|') && <div style={{color: '#E3A35B', fontWeight: 700, fontSize: 26, marginBottom: 2}}>{m.text.split('|')[0]}</div>}
+              {m.text.split('|').pop()}
               <span style={{fontSize: 20, color: out ? '#9DC3E6' : '#6D7F8F', marginLeft: 14}}>
                 {m.time ?? clock(m.i, clockFrom)}
                 {out ? ' ✓✓' : ''}

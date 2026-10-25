@@ -13,6 +13,7 @@ npx remotion render src/index.ts JetnodeAd out/jetnode-ad.mp4         # v4 ad, P
 npx remotion render src/index.ts JetnodeAd30 out/jetnode-ad30.mp4     # v5, 30 s with voiceover and the real bot
 npx remotion render src/index.ts Polar7 out/polar7-ch1.mp4 --gl=swangle  # 3D story series, part 1, JetnodeVPN banner mid-roll + end
 npx remotion render src/index.ts Messages2 out/messages2.mp4 --gl=swangle  # «Переписка» part 2; script/voice/mix: legacy/python/messages2.py
+npx remotion render src/index.ts Lift1 out/lift1.mp4 --gl=swangle  # «Лифт» part 1; script/voice/mix: legacy/python/lift1.py
 ```
 
 Fonts: install **SF Pro Display** on your machine (developer.apple.com/fonts). It is not stored here because of Apple's licence; without it the text falls back to Inter. The accent font is **SignPainter HouseScript** (Apple-distributed, not stored here): put `SignPainter-HouseScript.otf` into `public/fonts`. Without it accents fall back to Marck Script (OFL), which ships in `public/fonts`.
