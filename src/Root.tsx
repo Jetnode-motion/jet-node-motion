@@ -14,6 +14,7 @@ import {Messages1, DURATION as MESSAGES1_DURATION} from './compositions/Messages
 import {Messages2, DURATION as MESSAGES2_DURATION} from './compositions/Messages2/Messages2';
 import {Messages2Cover} from './compositions/Messages2/Cover';
 import {Lift1, DURATION as LIFT1_DURATION} from './compositions/Lift1/Lift1';
+import {Lift1Cover} from './compositions/Lift1/Cover';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -67,5 +68,6 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="Messages2Cover" component={Messages2Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
     {/* «Лифт» part 1 «13 этаж»: new series in the «Переписка» format */}
     <Composition id="Lift1" component={Lift1Ep} durationInFrames={Math.ceil(LIFT1_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="Lift1Cover" component={Lift1Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
   </>
 );
