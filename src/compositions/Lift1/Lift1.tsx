@@ -92,7 +92,7 @@ const Overlays: React.FC<{t: number}> = ({t}) => {
     <>
       <TopTag t={t} until={TAG_UNTIL} title={SERIES} sub="ЧАСТЬ 1 · 13 ЭТАЖ" />
       <Pill t={t} at={TAG_UNTIL + 0.2} until={SC.lift.to} x={540} y={300} text="01:02 · подъезд 3" bg="rgba(20,22,30,0.85)" size={30} />
-      <Pill t={t} at={SC.mirror.frm + 0.4} until={SC.mirror.to} x={540} y={300} text="на камере: 2 человека" bg={RED} size={30} />
+      <Pill t={t} at={Math.max(SC.mirror.frm + 0.4, PUSH.at + PUSH.dur)} until={SC.mirror.to} x={540} y={300} text="на камере: 2 человека" bg={RED} size={30} />
       <FloorLED t={t} />
       <Pill t={t} at={L(9) + 1.0} until={SC.panel.to} x={540} y={1080} text="в доме 12 этажей" bg="rgba(20,22,30,0.85)" size={30} />
       {inScene('doors', t) && (

@@ -42,7 +42,7 @@ m.CHAT = [
     (6, 0.9, 'in', 'Ольга, кв. 47|Второй стоит прямо за ним. Пусть не оборачивается'),
     (12, 1.0, 'in', 'Ольга, кв. 47|Не выходи. Он хочет, чтобы ты вышел первым'),
 ]
-m.PUSH = (8, 0.2, 4.0)
+m.PUSH = (3, 5.12, 4.0)  # ~12 s in, Nazar asked for the ad earlier
 m.TENSION = ['panel', 'doors', 'chat3', 'shadow', 'last']
 m.EERIE = ['lift', 'chat', 'chat2', 'mirror', 'end']
 
