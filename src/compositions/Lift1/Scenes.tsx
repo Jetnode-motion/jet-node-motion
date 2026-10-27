@@ -14,17 +14,21 @@ type V3 = [number, number, number];
 // leave the doors (or the ceiling) out and film through the gap.
 const CW = 0.9;
 const CH = 2.3;
-const STEEL = '#8E949C';
+const STEEL = '#B4A68C'; // warm laminate panels, like the old lifts
+const JACKET = '#2F56B0';
+const BEANIE = '#C8352B';
 const ME: V3 = [0.08, 0, -0.1];
 
 Object.assign(CAMS, {
-  l_lift: {from: [-0.7, 1.75, 2.4], to: [-0.5, 1.65, 2.0], look: [0.25, 1.15, 0], fov: 50},
-  l_chat: {from: [0.8, 1.45, 1.9], to: [0.6, 1.4, 1.5], look: [0.06, 1.3, -0.1], fov: 50},
+  l_lift: {from: [-1.4, 2.0, 4.4], to: [-1.1, 1.9, 3.8], look: [0.2, 1.1, 0], fov: 42},
+  l_chat: {from: [1.6, 2.0, 4.6], to: [1.3, 1.9, 4.0], look: [0, 1.3, -0.2], fov: 40},
+  l_wide: {from: [-1.2, 1.8, 5.0], to: [-0.9, 1.7, 4.4], look: [0, 1.3, -0.3], fov: 40},
+  l_close: {from: [0.9, 1.6, 2.9], to: [0.7, 1.55, 2.5], look: [0.06, 1.25, -0.1], fov: 40},
   l_mirror: {from: [-0.4, 1.62, 0.62], to: [-0.3, 1.58, 0.5], look: [0.05, 1.3, -1.3], fov: 62},
   l_panel: {from: [0.3, 1.4, 0.3], to: [0.48, 1.32, 0.45], look: [0.9, 1.3, 0.6], fov: 55},
   l_doors: {from: [-0.05, 1.55, -0.45], to: [0, 1.5, -0.05], look: [0, 1.2, 4], fov: 62},
   l_shadow: {from: [-0.85, 2.05, 1.7], to: [-0.75, 1.9, 1.45], look: [-0.2, 0, -0.15], fov: 60},
-  l_cctv: {from: [0.85, 2.3, 1.75], to: [0.8, 2.25, 1.6], look: [-0.1, 0.85, -0.2], fov: 62},
+  l_cctv: {from: [0.85, 2.25, 3.3], to: [0.8, 2.22, 3.1], look: [-0.1, 0.95, -0.2], fov: 52},
   l_last: {from: [-0.45, 1.55, 0.62], to: [-0.38, 1.5, 0.55], look: [0.0, 1.35, -1.4], fov: 55},
 });
 
@@ -43,7 +47,7 @@ const Panel: React.FC<{lit: number}> = ({lit}) => (
 );
 
 /** One copy of the cabin. `open` slides the doors apart, `ghost` puts someone behind him (mirror only). */
-const Cabin: React.FC<{t: number; open?: number; lit?: number; ghost?: number; front?: boolean; ceil?: boolean; light?: V3; floor?: string; cast?: boolean}> = ({t, open = 0, lit = 1, ghost, front = true, ceil = true, light = [0, CH - 0.15, 0], floor = '#26272B', cast = true}) => {
+const Cabin: React.FC<{t: number; open?: number; lit?: number; ghost?: number; front?: boolean; ceil?: boolean; light?: V3; floor?: string; cast?: boolean; gp?: V3; gry?: number}> = ({t, open = 0, lit = 1, ghost, front = true, ceil = true, light = [0, CH - 0.15, 0], floor = '#26272B', cast = true, gp = [-0.34, 0, 0.45], gry = Math.PI}) => {
   const fl = lit * (Math.floor(t * 9) % 23 === 0 ? 0.4 : 1);
   return (
     <group>
@@ -51,11 +55,14 @@ const Cabin: React.FC<{t: number; open?: number; lit?: number; ghost?: number; f
       {ceil && (
         <>
           <Box p={[0, CH, 0]} s={[CW * 2, 0.02, CW * 2]} c="#5E636A" />
-          <Box p={[0, CH - 0.02, 0]} s={[0.6, 0.02, 0.6]} c="#F4F1E8" e="#FFF4DA" ei={1.6 * fl} />
+          <Box p={[0, CH - 0.02, 0]} s={[0.6, 0.02, 0.6]} c="#F4F1E8" e="#FFE2B0" ei={1.8 * fl} />
         </>
       )}
-      <Box p={[-CW, CH / 2, 0]} s={[0.02, CH, CW * 2]} c={STEEL} r={0.45} />
-      <Box p={[CW, CH / 2, 0]} s={[0.02, CH, CW * 2]} c={STEEL} r={0.45} />
+      <Box p={[-CW, CH / 2, 0]} s={[0.02, CH, CW * 2]} c={STEEL} r={0.6} />
+      <Box p={[CW, CH / 2, 0]} s={[0.02, CH, CW * 2]} c={STEEL} r={0.6} />
+      {/* darker wood band along the lower walls */}
+      <Box p={[-CW + 0.012, 0.45, 0]} s={[0.02, 0.9, CW * 2]} c="#6E4A32" r={0.7} />
+      <Box p={[CW - 0.012, 0.45, 0]} s={[0.02, 0.9, CW * 2]} c="#6E4A32" r={0.7} />
       {/* handrail and the mirror frame */}
       <Box p={[-CW + 0.05, 0.9, 0]} s={[0.03, 0.03, CW * 1.5]} c="#C9CDD2" r={0.3} />
       <Box p={[0, CH / 2, -CW]} s={[CW * 2, 0.06, 0.02]} c="#3A3D42" rot={[0, 0, 0]} />
@@ -69,9 +76,10 @@ const Cabin: React.FC<{t: number; open?: number; lit?: number; ghost?: number; f
         </>
       )}
       <Panel lit={lit} />
-      <pointLight position={light} intensity={(ceil ? 2.2 : 4) * fl} distance={4} color="#FFF1D6" castShadow={cast} />
+      <pointLight position={light} intensity={(ceil ? 3.2 : 4.5) * fl} distance={4.5} color="#FFDDA8" castShadow={cast} />
+      <hemisphereLight args={['#9DB4D8', '#3A2A20', 0.35 * lit]} />
       {ghost !== undefined && (
-        <Figure p={[-0.34, 0, 0.45]} ry={Math.PI} coat="#08090B" hood dark pose={{armR: 0.1 + 2.5 * ghost, armL: 0.05, head: 0.15, breath: t / 4}} />
+        <Figure p={gp} ry={gry} coat="#08090B" hood dark pose={{armR: 0.1 + 2.5 * ghost, armL: 0.05, head: 0.15, breath: t / 4}} />
       )}
     </group>
   );
@@ -80,15 +88,15 @@ const Cabin: React.FC<{t: number; open?: number; lit?: number; ghost?: number; f
 /** Him, standing facing the doors (or the mirror), optionally with the phone up. */
 const Me: React.FC<{t: number; ry?: number; phone?: boolean; press?: number}> = ({t, ry = 0, phone, press = 0}) => (
   <group position={ME} rotation={[0, ry, 0]}>
-    <Figure p={[0, 0, 0]} coat={HOODIE} hood={false} eyes pose={phone ? {armL: 1.1, armR: 1.1, tilt: 0.3, breath: t / 2.5} : {armR: 1.4 * press, spreadR: 0.12 + 0.5 * press, armL: 0.1, breath: t / 3}} />
-    {phone && <Phone p={[0, 1.15, 0.5]} rot={[-0.6, 0, 0]} lit={1.3} />}
+    <Figure p={[0, 0, 0]} coat={JACKET} beanie={BEANIE} hood={false} eyes pose={phone ? {armL: 1.1, armR: 1.1, tilt: 0.3, breath: t / 2.5} : {armR: 1.4 * press, spreadR: 0.12 + 0.5 * press, armL: 0.1, breath: t / 3}} />
+    {phone && <Phone p={[0, 1.15, 0.5]} rot={[-0.6, 0, 0]} lit={0.7} />}
   </group>
 );
 
 /** The real cabin plus its reflection behind the mirror wall. */
-const World: React.FC<{t: number; open?: number; me?: React.ReactNode; ghost?: number; front?: boolean; lit?: number; real?: boolean}> = ({t, open, me, ghost, front, lit = 1, real}) => (
+const World: React.FC<{t: number; open?: number; me?: React.ReactNode; ghost?: number; front?: boolean; lit?: number; real?: V3}> = ({t, open, me, ghost, front, lit = 1, real}) => (
   <>
-    <Cabin t={t} open={open} front={front} lit={lit} ghost={real ? ghost : undefined} />
+    <Cabin t={t} open={open} front={front} lit={lit} ghost={real ? ghost : undefined} gp={real} gry={0.3} />
     {me}
     <group position={[0, 0, -CW * 2]} scale={[1, 1, -1]}>
       <Cabin t={t} open={0} ghost={ghost} lit={lit} />
@@ -207,6 +215,15 @@ export const LiftLast: React.FC<SceneProps & {arm?: number}> = ({t, d, arm}) => 
 export const LiftCCTV: React.FC<SceneProps> = ({t, d}) => (
   <Base amb={0.25} fog="#05060A" near={6} far={14}>
     <Cam id="l_cctv" k={t / d} />
-    <World t={t} front={false} real ghost={1} me={<Me t={t} ry={Math.PI} />} />
+    <pointLight position={[0.5, 1.9, 1.6]} intensity={1.6} distance={4} color="#FFFFFF" />
+    <World t={t} front={false} real={[-0.32, 0, -0.62]} ghost={0.75} me={<Me t={t} ry={0.35} />} />
+  </Base>
+);
+
+/** Wide front shot through the missing front wall: the whole figure, the mirror behind him. */
+export const LiftWide: React.FC<SceneProps & {cam?: string; lit?: number; ghost?: number; real?: V3; phone?: boolean}> = ({t, d, cam = 'l_wide', lit = 1, ghost, real, phone = true}) => (
+  <Base amb={0.3 * lit} fog="#05060A" near={7} far={16}>
+    <Cam id={cam} k={t / d} />
+    <World t={t} front={false} lit={lit} ghost={ghost} real={real} me={<Me t={t} phone={phone} />} />
   </Base>
 );

@@ -92,7 +92,8 @@ export const Figure: React.FC<{
   eyes?: boolean;
   pose?: Pose;
   dark?: boolean;
-}> = ({p = [0, 0, 0], ry = 0, coat, hood = true, headset = false, eyes = false, pose = {}, dark = false}) => {
+  beanie?: string;
+}> = ({p = [0, 0, 0], ry = 0, coat, hood = true, headset = false, eyes = false, pose = {}, dark = false, beanie}) => {
   const {armL = 0, armR = 0, spreadL = 0.12, spreadR = 0.12, head = 0, tilt = 0, sit = false, breath = 0} = pose;
   const b = 1 + 0.015 * Math.sin(breath * Math.PI * 2);
   const hip = sit ? 0.55 : 0.78;
@@ -150,6 +151,19 @@ export const Figure: React.FC<{
               <mesh position={[0, 0.0, 0.12]} castShadow>
                 <torusGeometry args={[0.215, 0.075, 12, 28]} />
                 <Mat c={P.fur} r={1} />
+              </mesh>
+            </>
+          )}
+          {beanie && (
+            <>
+              {/* knit hat: a dome over the crown and a folded rim */}
+              <mesh position={[0, 0.06, -0.01]} castShadow>
+                <sphereGeometry args={[0.24, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.45]} />
+                <Mat c={beanie} r={1} />
+              </mesh>
+              <mesh position={[0, 0.1, -0.01]} rotation={[Math.PI / 2 + 0.12, 0, 0]} castShadow>
+                <torusGeometry args={[0.215, 0.045, 10, 28]} />
+                <Mat c={beanie} r={1} />
               </mesh>
             </>
           )}
