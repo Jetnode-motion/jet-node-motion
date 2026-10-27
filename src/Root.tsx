@@ -15,6 +15,8 @@ import {Messages2, DURATION as MESSAGES2_DURATION} from './compositions/Messages
 import {Messages2Cover} from './compositions/Messages2/Cover';
 import {Lift1, DURATION as LIFT1_DURATION} from './compositions/Lift1/Lift1';
 import {Lift1Cover} from './compositions/Lift1/Cover';
+import {Lift2, DURATION as LIFT2_DURATION} from './compositions/Lift2/Lift2';
+import {Lift2Cover} from './compositions/Lift2/Cover';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -46,6 +48,7 @@ const Polar7Ep1 = withSound(Polar7, 'polar7.wav', false);
 const Messages1Ep = withSound(Messages1, 'messages1.wav', false);
 const Messages2Ep = withSound(Messages2, 'messages2.wav', false);
 const Lift1Ep = withSound(Lift1, 'lift1.wav', false);
+const Lift2Ep = withSound(Lift2, 'lift2.wav', false);
 
 export const RemotionRoot: React.FC = () => (
   <>
@@ -69,5 +72,8 @@ export const RemotionRoot: React.FC = () => (
     {/* «Лифт» part 1 «13 этаж»: new series in the «Переписка» format */}
     <Composition id="Lift1" component={Lift1Ep} durationInFrames={Math.ceil(LIFT1_DURATION * FPS)} fps={FPS} width={W} height={H} />
     <Composition id="Lift1Cover" component={Lift1Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
+    {/* «Лифт» part 2 «Вторая тень» */}
+    <Composition id="Lift2" component={Lift2Ep} durationInFrames={Math.ceil(LIFT2_DURATION * FPS)} fps={FPS} width={W} height={H} />
+    <Composition id="Lift2Cover" component={Lift2Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
   </>
 );

@@ -24,6 +24,7 @@ Object.assign(CAMS, {
   l_panel: {from: [0.3, 1.4, 0.3], to: [0.48, 1.32, 0.45], look: [0.9, 1.3, 0.6], fov: 55},
   l_doors: {from: [-0.05, 1.55, -0.45], to: [0, 1.5, -0.05], look: [0, 1.2, 4], fov: 62},
   l_shadow: {from: [-0.85, 2.05, 1.7], to: [-0.75, 1.9, 1.45], look: [-0.2, 0, -0.15], fov: 60},
+  l_cctv: {from: [0.85, 2.3, 1.75], to: [0.8, 2.25, 1.6], look: [-0.1, 0.85, -0.2], fov: 62},
   l_last: {from: [-0.45, 1.55, 0.62], to: [-0.38, 1.5, 0.55], look: [0.0, 1.35, -1.4], fov: 55},
 });
 
@@ -85,12 +86,12 @@ const Me: React.FC<{t: number; ry?: number; phone?: boolean; press?: number}> = 
 );
 
 /** The real cabin plus its reflection behind the mirror wall. */
-const World: React.FC<{t: number; open?: number; me?: React.ReactNode; ghost?: number; front?: boolean}> = ({t, open, me, ghost, front}) => (
+const World: React.FC<{t: number; open?: number; me?: React.ReactNode; ghost?: number; front?: boolean; lit?: number; real?: boolean}> = ({t, open, me, ghost, front, lit = 1, real}) => (
   <>
-    <Cabin t={t} open={open} front={front} />
+    <Cabin t={t} open={open} front={front} lit={lit} ghost={real ? ghost : undefined} />
     {me}
     <group position={[0, 0, -CW * 2]} scale={[1, 1, -1]}>
-      <Cabin t={t} open={0} ghost={ghost} />
+      <Cabin t={t} open={0} ghost={ghost} lit={lit} />
       {me}
     </group>
     {/* a faint cold tint on the glass */}
@@ -110,10 +111,10 @@ export const LiftIn: React.FC<SceneProps> = ({t, d}) => (
 );
 
 /** Close on him with the phone. */
-export const LiftPhone: React.FC<SceneProps> = ({t, d}) => (
-  <Base amb={0.2} fog="#05060A" near={6} far={14}>
+export const LiftPhone: React.FC<SceneProps & {lit?: number; ghost?: number}> = ({t, d, lit = 1, ghost}) => (
+  <Base amb={0.2 * lit} fog="#05060A" near={6} far={14}>
     <Cam id="l_chat" k={t / d} />
-    <World t={t} front={false} me={<Me t={t} phone />} />
+    <World t={t} front={false} lit={lit} ghost={ghost} me={<Me t={t} phone />} />
   </Base>
 );
 
@@ -134,10 +135,10 @@ export const LiftPanel: React.FC<SceneProps> = ({t, d}) => (
 );
 
 /** Doors open on the 13th floor: a dark corridor and, at its end, his own front door. */
-export const LiftDoors: React.FC<SceneProps> = ({t, d}) => {
-  const open = eio(prog(t, 0.2, 1.6));
+export const LiftDoors: React.FC<SceneProps & {opened?: boolean; ajar?: number}> = ({t, d, opened, ajar = 0}) => {
+  const open = opened ? 1 : eio(prog(t, 0.2, 1.6));
   return (
-    <Base amb={0.06} fog="#030305" near={2} far={7}>
+    <Base amb={0.06} fog="#030305" near={ajar ? 4 : 2} far={ajar ? 12 : 7}>
       <Cam id="l_doors" k={t / d} />
       <World t={t} open={open} />
       <group position={[0, 0, CW]}>
@@ -145,7 +146,16 @@ export const LiftDoors: React.FC<SceneProps> = ({t, d}) => {
         <Box p={[-0.8, 1.3, 2.6]} s={[0.02, 2.6, 5.2]} c="#3F4A3E" />
         <Box p={[0.8, 1.3, 2.6]} s={[0.02, 2.6, 5.2]} c="#3F4A3E" />
         <Box p={[0, 2.6, 2.6]} s={[1.6, 0.02, 5.2]} c="#2A2A28" />
-        <Box p={[0, 1.05, 5.15]} s={[0.9, 2.1, 0.06]} c="#4A3A30" r={0.6} />
+        {/* his front door, hinged on the left; when ajar, warm light spills out */}
+        <group position={[-0.45, 0, 5.15]} rotation={[0, -1.1 * ajar, 0]}>
+          <Box p={[0.45, 1.05, 0]} s={[0.9, 2.1, 0.06]} c="#4A3A30" r={0.6} />
+        </group>
+        {ajar > 0 && (
+          <>
+            <Box p={[0, 1.05, 5.2]} s={[0.88, 2.08, 0.02]} c="#FFD9A0" e="#FFC774" ei={1.6 * ajar} />
+            <pointLight position={[0, 1.2, 4.9]} intensity={2.5 * ajar} distance={3} color="#FFC774" />
+          </>
+        )}
         <Box p={[0, 0.01, 4.85]} s={[0.8, 0.02, 0.45]} c="#5A2F2A" r={1} />
         <Lamp p={[0, 2.55, 4.3]} i={5} c="#E8F0C8" />
       </group>
@@ -172,8 +182,8 @@ const FlatShadow: React.FC<{at: [number, number]; rot: number; op: number; arm?:
 );
 
 /** The floor by his feet: his shadow, and another one next to it that nobody casts. */
-export const LiftShadow: React.FC<SceneProps> = ({t, d}) => {
-  const k = eo3(prog(t, 1.4, 2.6));
+export const LiftShadow: React.FC<SceneProps & {shown?: boolean}> = ({t, d, shown}) => {
+  const k = shown ? 1 : eo3(prog(t, 1.4, 2.6));
   return (
     <Base amb={0.3} fog="#05060A" near={6} far={14}>
       <Cam id="l_shadow" k={t / d} />
@@ -186,9 +196,17 @@ export const LiftShadow: React.FC<SceneProps> = ({t, d}) => {
 };
 
 /** Last: in the mirror someone stands behind him and raises a hand. He does not. */
-export const LiftLast: React.FC<SceneProps> = ({t, d}) => (
+export const LiftLast: React.FC<SceneProps & {arm?: number}> = ({t, d, arm}) => (
   <Base amb={0.08} fog="#05060A" near={6} far={14}>
     <Cam id="l_last" k={t / d} />
-    <World t={t} me={<Me t={t} ry={Math.PI} />} ghost={eio(prog(t, 1.0, d - 0.8))} />
+    <World t={t} me={<Me t={t} ry={Math.PI} />} ghost={arm ?? eio(prog(t, 1.0, d - 0.8))} />
+  </Base>
+);
+
+/** The lift's own camera, high in the corner: here the second one is in the cabin, not just the mirror. */
+export const LiftCCTV: React.FC<SceneProps> = ({t, d}) => (
+  <Base amb={0.25} fog="#05060A" near={6} far={14}>
+    <Cam id="l_cctv" k={t / d} />
+    <World t={t} front={false} real ghost={1} me={<Me t={t} ry={Math.PI} />} />
   </Base>
 );
