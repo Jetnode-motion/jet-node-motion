@@ -17,6 +17,7 @@ import {Lift1, DURATION as LIFT1_DURATION} from './compositions/Lift1/Lift1';
 import {Lift1Cover} from './compositions/Lift1/Cover';
 import {Lift2, DURATION as LIFT2_DURATION} from './compositions/Lift2/Lift2';
 import {Lift2Cover} from './compositions/Lift2/Cover';
+import {ToyTest} from './compositions/Toy/ToyTest';
 
 /*
  * The soundtrack lives here, outside CameraMotionBlur: the blur renders its children as
@@ -75,5 +76,7 @@ export const RemotionRoot: React.FC = () => (
     {/* «Лифт» part 2 «Вторая тень» */}
     <Composition id="Lift2" component={Lift2Ep} durationInFrames={Math.ceil(LIFT2_DURATION * FPS)} fps={FPS} width={W} height={H} />
     <Composition id="Lift2Cover" component={Lift2Cover} durationInFrames={1} fps={FPS} width={W} height={H} />
+    {/* look test: vinyl-toy characters in a Soviet-flat diorama */}
+    <Composition id="ToyTest" component={ToyTest} durationInFrames={60} fps={FPS} width={W} height={H} />
   </>
 );
