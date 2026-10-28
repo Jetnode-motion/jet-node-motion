@@ -13,13 +13,15 @@ export const HAND = '"Marck Script", cursive';
 export const YELLOW = '#FFD23F';
 export const RED = '#FF3B30';
 
-export type Line = {at: number; dur: number; scene: string; voice?: string; cap: string};
+export type Line = {at: number; dur: number; scene: string; voice?: string; cap: string; words?: {w: string; at: number; acc: boolean}[]};
 
 type Word = {w: string; acc: boolean; at: number};
 type Chunk = {words: Word[]; from: number; to: number; red: boolean};
 
 /** Words of a caption with the moment each one is spoken, spread over the line by length. */
 const words = (ln: Line): Word[] => {
+  // exact timings from speech-to-text when the episode has them (build_words in messages1.py)
+  if (ln.words) return ln.words.map((w) => ({w: w.w, acc: w.acc, at: w.at}));
   const raw: {w: string; acc: boolean}[] = [];
   ln.cap.split(/\s+/).forEach((w) => {
     if (!w) return;

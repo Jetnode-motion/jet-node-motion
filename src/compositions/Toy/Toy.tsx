@@ -41,6 +41,8 @@ export type ToyPose = {
   walk?: number;
   /** breathing phase */
   breath?: number;
+  /** 0 standing .. 1 seated (seat height ~0.5) */
+  sit?: number;
   /** eyes open 0..1 (blink) */
   eyes?: number;
 };
@@ -88,14 +90,24 @@ const Arm: React.FC<{side: 1 | -1; raise: number; out: number; elbow: number; sl
   </group>
 );
 
-const Leg: React.FC<{side: 1 | -1; swing: number; pants: string; shoes: string; skin: string; skirt: boolean}> = ({side, swing, pants, shoes, skin, skirt}) => (
-  <group position={[0.1 * side, 0.78, 0]} rotation={[swing, 0, 0]}>
-    <mesh position={[0, -0.35, 0]} castShadow receiveShadow material={plastic(skirt ? skin : pants)}>
-      <cylinderGeometry args={[0.088, 0.074, 0.66, 22]} />
-    </mesh>
-    <RBox s={[0.13, 0.09, 0.27]} r={0.04} p={[0, -0.735, 0.035]} c={shoes} rough={0.35} />
-  </group>
-);
+/** Leg hinged at the hip with a knee: thigh, shin, shoe. `knee` bends the shin back. */
+const Leg: React.FC<{side: 1 | -1; swing: number; knee: number; pants: string; shoes: string; skin: string; skirt: boolean}> = ({side, swing, knee, pants, shoes, skin, skirt}) => {
+  const m = plastic(skirt ? skin : pants);
+  return (
+    <group position={[0.1 * side, 0.78, 0]} rotation={[swing, 0, 0]}>
+      <mesh position={[0, -0.17, 0]} castShadow receiveShadow material={m}>
+        <cylinderGeometry args={[0.088, 0.08, 0.36, 22]} />
+      </mesh>
+      <group position={[0, -0.34, 0]} rotation={[knee, 0, 0]}>
+        <Sph r={0.08} c={skirt ? skin : pants} />
+        <mesh position={[0, -0.17, 0]} castShadow receiveShadow material={m}>
+          <cylinderGeometry args={[0.08, 0.074, 0.34, 22]} />
+        </mesh>
+        <RBox s={[0.13, 0.09, 0.27]} r={0.04} p={[0, -0.395, 0.035]} c={shoes} rough={0.35} />
+      </group>
+    </group>
+  );
+};
 
 const Hair: React.FC<{kind: Look['hair']; c: string}> = ({kind, c}) => {
   switch (kind) {
@@ -192,7 +204,7 @@ const Head: React.FC<{look: Look; eyes: number}> = ({look, eyes}) => {
 };
 
 export const Toy: React.FC<{look: Look; pose?: ToyPose; p?: V3; ry?: number; scale?: number}> = ({look, pose = {}, p = [0, 0, 0], ry = 0, scale = 1}) => {
-  const {armL = 0.05, armR = 0.05, outL = 0, outR = 0, elbowL = 0.15, elbowR = 0.15, yaw = 0, pitch = 0, walk = 0, breath = 0, eyes = 1} = pose;
+  const {armL = 0.05, armR = 0.05, outL = 0, outR = 0, elbowL = 0.15, elbowR = 0.15, yaw = 0, pitch = 0, walk = 0, breath = 0, eyes = 1, sit = 0} = pose;
   const skin = look.skin ?? '#F2C7A5';
   const shoes = look.shoes ?? '#2B2B2E';
   const long = look.sleeves === 'long';
@@ -201,9 +213,9 @@ export const Toy: React.FC<{look: Look; pose?: ToyPose; p?: V3; ry?: number; sca
   const b = 1 + 0.012 * Math.sin(breath * Math.PI * 2);
   return (
     <group position={p} rotation={[0, ry, 0]} scale={scale}>
-      <group position={[0, bob, 0]}>
-        <Leg side={-1} swing={sw} pants={look.pants} shoes={shoes} skin={skin} skirt={!!look.skirt} />
-        <Leg side={1} swing={-sw} pants={look.pants} shoes={shoes} skin={skin} skirt={!!look.skirt} />
+      <group position={[0, bob - 0.26 * sit, 0]}>
+        <Leg side={-1} swing={sw - (Math.PI / 2) * sit} knee={(Math.PI / 2) * sit} pants={look.pants} shoes={shoes} skin={skin} skirt={!!look.skirt} />
+        <Leg side={1} swing={-sw - (Math.PI / 2) * sit} knee={(Math.PI / 2) * sit} pants={look.pants} shoes={shoes} skin={skin} skirt={!!look.skirt} />
         {look.skirt ? (
           <mesh position={[0, 0.7, 0]} castShadow material={plastic(look.pants)}>
             <cylinderGeometry args={[0.2, 0.27, 0.36, 28]} />

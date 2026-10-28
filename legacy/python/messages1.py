@@ -18,6 +18,7 @@ SFX_DIR = os.environ.get('SFX_DIR', '/mnt/project-files/sfx')
 SR = 44100
 VOICE = 'nPczCjzI2devNBz1zQrb'  # ElevenLabs premade «Brian», picked by Nazar
 MODEL = 'eleven_v3'
+SPEED = None  # optional voice_settings.speed for faster episodes
 
 # (scene, spoken text with v3 tags, caption with *accent*, gap before in s)
 LINES = [
@@ -68,7 +69,7 @@ CHAT = [
 def tts(text, path):
     req = urllib.request.Request(
         f'https://api.elevenlabs.io/v1/text-to-speech/{VOICE}?output_format=mp3_44100_128',
-        data=json.dumps({'text': text, 'model_id': MODEL, 'language_code': 'ru'}).encode(),
+        data=json.dumps({'text': text, 'model_id': MODEL, 'language_code': 'ru', **({'voice_settings': {'speed': SPEED}} if SPEED else {})}).encode(),
         headers={'xi-api-key': os.environ['ELEVENLABS_API_KEY'], 'Content-Type': 'application/json'},
     )
     with urllib.request.urlopen(req, timeout=120) as r, open(path, 'wb') as f:
@@ -321,6 +322,71 @@ def build_mix(data):
 # ---------------- Nazar's own recording
 def _norm(w):
     return re.sub(r'[^а-яa-z0-9]', '', w.lower().replace('ё', 'е'))
+
+
+def _stt(audio_bytes, filename='take.wav'):
+    """ElevenLabs speech-to-text with word timings (seconds from the start of the audio)."""
+    req = urllib.request.Request('https://api.elevenlabs.io/v1/speech-to-text', method='POST')
+    boundary = 'polar7boundary'
+    parts = []
+    for k, v in (('model_id', 'scribe_v1'), ('language_code', 'rus')):
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+    parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode() + audio_bytes + b'\r\n')
+    parts.append(f'--{boundary}--\r\n'.encode())
+    req.data = b''.join(parts)
+    req.add_header('xi-api-key', os.environ['ELEVENLABS_API_KEY'])
+    req.add_header('Content-Type', f'multipart/form-data; boundary={boundary}')
+    with urllib.request.urlopen(req, timeout=600) as r:
+        return json.loads(r.read())
+
+
+def build_words(data):
+    """Exact captions: every spoken word with the moment it is said, from STT of the trimmed take.
+
+    The caption is the spoken text itself (audio tags removed), so subtitles match the voice word for
+    word. Words that appear *starred* in the line's caption keep the accent colour. STT results are
+    cached next to the voice files as lNN.words.json.
+    """
+    import io, wave
+    for i, ln in enumerate(data['lines']):
+        spoken = re.sub(r'\[[a-z ]+\]\s*', '', LINES[i][1]).strip()
+        acc = {_norm(w) for w in re.findall(r'\*([^*]+)\*', ln['cap']) for w in w.split()}
+        cache = vo_path(i).rsplit('.', 1)[0] + '.words.json'
+        if os.path.exists(cache):
+            stt = json.load(open(cache))
+        else:
+            a = trim(load(vo_path(i)))
+            buf = io.BytesIO()
+            with wave.open(buf, 'wb') as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(SR)
+                w.writeframes((np.clip(a, -1, 1) * 32767).astype(np.int16).tobytes())
+            stt = _stt(buf.getvalue())
+            json.dump(stt, open(cache, 'w'), ensure_ascii=False)
+        heard = [w for w in stt['words'] if w['type'] == 'word' and _norm(w['text'])]
+        script = [w for w in spoken.split() if _norm(w)]
+        sm = difflib.SequenceMatcher(None, [_norm(w) for w in script], [_norm(w['text']) for w in heard])
+        at = [None] * len(script)
+        for tag, a0, a1, b0, b1 in sm.get_opcodes():
+            if tag == 'equal' or (tag == 'replace' and a1 - a0 == b1 - b0):
+                for k in range(a1 - a0):
+                    at[a0 + k] = heard[b0 + k]['start']
+            elif tag == 'replace':
+                # STT split or merged words here: spread the script words over the heard span
+                t0, t1 = heard[b0]['start'], heard[b1 - 1]['end']
+                for k in range(a1 - a0):
+                    at[a0 + k] = t0 + (t1 - t0) * k / (a1 - a0)
+        # words STT missed: spread between their neighbours
+        for k in range(len(at)):
+            if at[k] is None:
+                prev = next((at[j] for j in range(k - 1, -1, -1) if at[j] is not None), 0.0)
+                nxt = next((at[j] for j in range(k + 1, len(at)) if at[j] is not None), ln['dur'])
+                at[k] = prev + (nxt - prev) * 0.5
+        ln['words'] = [dict(w=w, at=round(ln['at'] + t, 3), acc=_norm(w) in acc) for w, t in zip(script, at)]
+    with open(OUT_JSON, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    return data
 
 
 def import_recording(path):
